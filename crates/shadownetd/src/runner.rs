@@ -5,9 +5,9 @@
 //! commands or closures that read from the world; frames come back out
 //! through a broadcast channel, serialised once.
 
+use std::collections::VecDeque;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{self, RecvTimeoutError};
-use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
@@ -66,7 +66,6 @@ impl Handle {
         })
         .to_string()
     }
-
 }
 
 pub struct RunnerConfig {

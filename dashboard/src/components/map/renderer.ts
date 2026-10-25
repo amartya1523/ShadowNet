@@ -34,7 +34,9 @@ export interface SceneInput {
 
 const WIDTH_PX = [0.55, 0.85, 1.25, 1.85];
 const HOT_UTIL = 850;
-const RISK_GLOW = 300;
+// Calibrated probability of failure within the horizon, permille. The base
+// rate is about 5, so this is a thirtyfold lift.
+const RISK_GLOW = 150;
 
 function widthClass(capacityGbps: number): number {
   if (capacityGbps <= 10) return 0;
@@ -274,7 +276,7 @@ export class MapRenderer {
     if (risky.length && risk) {
       ctx.globalCompositeOperation = "lighter";
       for (const i of risky) {
-        const intensity = Math.min(1, (risk[i] - RISK_GLOW) / 500);
+        const intensity = Math.min(1, (risk[i] - RISK_GLOW) / 350);
         const pulse = 0.5 + 0.5 * Math.sin(now / 380 + i * 1.7);
         ctx.strokeStyle = `rgba(167, 123, 255, ${(0.12 + 0.3 * intensity * pulse).toFixed(3)})`;
         ctx.lineWidth = (5 + 5 * intensity * pulse) * px * widthScale;

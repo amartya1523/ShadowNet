@@ -194,12 +194,29 @@ impl Predictor {
         ]
     }
 
-    fn score(&self, x: &[f32; FEATURES]) -> f64 {
+    fn logit(&self, x: &[f32; FEATURES]) -> f64 {
         let mut z = self.weights[FEATURES];
         for i in 0..FEATURES {
             z += self.weights[i] * self.moments[i].scale(x[i] as f64);
         }
-        1.0 / (1.0 + (-z).exp())
+        z
+    }
+
+    /// The model's own output, as trained (with positives up-weighted).
+    fn score(&self, x: &[f32; FEATURES]) -> f64 {
+        1.0 / (1.0 + (-self.logit(x)).exp())
+    }
+
+    /// Weight given to positives in training.
+    fn positive_weight(&self) -> f64 {
+        (self.negatives as f64 / self.positives.max(1) as f64).clamp(1.0, 20.0)
+    }
+
+    /// An actual probability. Up-weighting positives by `w` inflates the
+    /// odds by `w`, so take it back out of the logit before reporting (the
+    /// prior correction of King & Zeng). Ranking, and so AUC, is unchanged.
+    fn probability(&self, x: &[f32; FEATURES]) -> f64 {
+        1.0 / (1.0 + (-(self.logit(x) - self.positive_weight().ln())).exp())
     }
 
     /// Called once per simulated second.
@@ -217,7 +234,7 @@ impl Predictor {
                 continue;
             }
             let x = self.features(l, links, t);
-            self.risk[l] = self.score(&x) as f32;
+            self.risk[l] = self.probability(&x) as f32;
             rows.push((LinkId::from_idx(l), x));
         }
         let mut ranked: Vec<(f32, LinkId)> = rows.iter().map(|(l, _)| (self.risk[l.idx()], *l)).collect();
@@ -269,7 +286,7 @@ impl Predictor {
             // up-weighted by the running class ratio. Capped low: with a big
             // weight a single positive moves the model further than a
             // thousand negatives can pull it back, and it oscillates.
-            let w = if y { (self.negatives as f64 / self.positives.max(1) as f64).clamp(1.0, 20.0) } else { 1.0 };
+            let w = if y { self.positive_weight() } else { 1.0 };
             let g = (score - y as u8 as f64) * w * self.lr;
             for i in 0..FEATURES {
                 let xi = self.moments[i].scale(x[i] as f64);

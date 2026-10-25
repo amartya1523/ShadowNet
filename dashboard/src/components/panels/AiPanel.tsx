@@ -99,7 +99,11 @@ export function AiPanel() {
         </div>
         <div className={styles.qrStats}>
           <Stat label="Q updates/s" value={compact(ai.qrouting.updatesPerSec)} />
-          <Stat label="Mean |TD|" value={`${fixed(ai.qrouting.meanAbsTdMs, 2)} ms`} />
+          <Stat label="Mean |TD|" value={
+              ai.qrouting.meanAbsTdMs < 0.1
+                ? `${fixed(ai.qrouting.meanAbsTdMs * 1000, 1)} µs`
+                : `${fixed(ai.qrouting.meanAbsTdMs, 2)} ms`
+            } />
         </div>
       </div>
     </Panel>

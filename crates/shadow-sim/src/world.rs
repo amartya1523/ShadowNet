@@ -819,6 +819,9 @@ impl World {
         }
         self.monkey.enabled = false;
         self.monkey.calm(&mut self.links);
+        // A scenario still running would keep breaking things on schedule.
+        self.scenario_run += 1;
+        self.scenario = None;
         self.traffic.stop_campaigns(self.q.now());
         self.info("heal", "all faults cleared".to_string());
     }
@@ -1137,7 +1140,7 @@ impl World {
             },
             qrouting: wire::QRoutingView {
                 updates_per_sec: self.q_updates_rate.round(),
-                mean_abs_td_ms: (self.td_ms * 1000.0).round() / 1000.0,
+                mean_abs_td_ms: (self.td_ms * 1e6).round() / 1e6,
             },
         }
     }
