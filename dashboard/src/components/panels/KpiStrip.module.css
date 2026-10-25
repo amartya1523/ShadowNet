@@ -1,0 +1,117 @@
+.strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.tile {
+  --tone: var(--cyan);
+  position: relative;
+  padding: 9px 12px 6px;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 300ms ease;
+}
+.tile::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--tone);
+  opacity: 0.8;
+  box-shadow: 0 0 12px var(--tone);
+  transition: background 300ms ease;
+}
+.ok {
+  --tone: var(--cyan);
+}
+.warn {
+  --tone: var(--amber);
+  border-color: rgba(255, 181, 71, 0.25);
+}
+.bad {
+  --tone: var(--red);
+  border-color: rgba(255, 77, 94, 0.32);
+  background:
+    linear-gradient(180deg, rgba(255, 77, 94, 0.07), transparent 70%),
+    var(--panel);
+}
+.neutral {
+  --tone: var(--text-4);
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+.label {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.valueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 4px;
+  white-space: nowrap;
+  min-width: 0;
+}
+.value {
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #f1f8ff;
+  line-height: 1.05;
+}
+.warn .value {
+  color: #ffd9a0;
+}
+.bad .value {
+  color: #ffb3ba;
+  text-shadow: 0 0 16px rgba(255, 77, 94, 0.45);
+}
+.placeholder {
+  color: var(--text-4);
+}
+.unit {
+  font-size: 11px;
+  color: var(--text-2);
+}
+.note {
+  font-size: 9.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spark {
+  display: block;
+  margin-top: 4px;
+}
+.sparkEmpty {
+  height: 24px;
+  margin-top: 4px;
+  border-bottom: 1px dashed var(--line);
+}
+
+@media (max-width: 1600px) {
+  .value {
+    font-size: 19px;
+  }
+  .note {
+    display: none;
+  }
+}

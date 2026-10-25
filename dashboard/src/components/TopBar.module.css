@@ -1,0 +1,210 @@
+.bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 0 16px 0 18px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(10, 19, 34, 0.96), rgba(5, 10, 19, 0.96));
+  box-shadow: 0 1px 0 rgba(63, 227, 242, 0.05), 0 10px 30px -20px rgba(63, 227, 242, 0.25);
+  min-width: 0;
+}
+
+/* Thin cyan rule under the bar, brightest under the brand. */
+.bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(63, 227, 242, 0.7), rgba(63, 227, 242, 0.08) 40%, transparent 80%);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+}
+.logo {
+  width: 30px;
+  height: 30px;
+  color: var(--cyan);
+  filter: drop-shadow(0 0 6px rgba(63, 227, 242, 0.55));
+}
+.wordmark {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.32em;
+  color: #eafcff;
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(63, 227, 242, 0.35);
+}
+.subtitle {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.divider {
+  width: 1px;
+  height: 30px;
+  background: var(--line-2);
+  flex: none;
+}
+
+.clockGroup {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: none;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.statLabel {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.statValue {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.clock {
+  font-size: 20px;
+  font-weight: 600;
+  color: #eafcff;
+  line-height: 1;
+  min-width: 118px;
+  text-shadow: 0 0 14px rgba(63, 227, 242, 0.35);
+}
+.tPrefix {
+  color: var(--cyan);
+  font-size: 13px;
+  margin-right: 4px;
+}
+.lagging {
+  color: var(--amber);
+}
+
+.controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin: 0 auto;
+  flex: none;
+}
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.play {
+  height: 32px;
+  min-width: 100px;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+}
+
+.badge {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: rgba(3, 8, 16, 0.6);
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.badge b {
+  color: var(--text);
+  font-weight: 600;
+}
+.badgeEmpty {
+  color: var(--text-4);
+}
+.sep {
+  color: var(--text-4);
+  margin: 0 3px;
+}
+
+.conn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 128px;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 18%, transparent), 0 0 12px currentColor;
+}
+.connLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+.connAddr {
+  font-size: 9.5px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.ok {
+  color: var(--teal);
+}
+.ok .connLabel {
+  color: var(--teal);
+}
+.wait {
+  color: var(--amber);
+}
+.wait .dot {
+  animation: blink 1s ease-in-out infinite;
+}
+.bad {
+  color: var(--red);
+}
+.bad .dot {
+  animation: blink 0.8s ease-in-out infinite;
+}
+
+@media (max-width: 1600px) {
+  .bar {
+    gap: 16px;
+  }
+  .clockGroup {
+    gap: 14px;
+  }
+  .controls {
+    gap: 10px;
+  }
+  .right {
+    margin-left: 8px;
+    gap: 10px;
+  }
+  .eventsStat {
+    display: none;
+  }
+}

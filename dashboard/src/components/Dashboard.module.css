@@ -1,0 +1,23 @@
+.shell {
+  display: grid;
+  grid-template-rows: var(--topbar) minmax(0, 1fr);
+  height: 100vh;
+  width: 100vw;
+  min-width: 1280px;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: var(--rail-left) minmax(0, 1fr) var(--rail-right);
+  gap: var(--gap);
+  padding: var(--gap);
+  min-height: 0;
+}
+
+.center {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) var(--log-height);
+  gap: var(--gap);
+  min-height: 0;
+  min-width: 0;
+}

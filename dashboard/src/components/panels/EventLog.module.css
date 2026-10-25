@@ -1,0 +1,92 @@
+.panel {
+  min-height: 0;
+}
+.body {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.lines {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  flex: 1;
+  min-height: 0;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 64px 40px 104px minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 12px;
+  white-space: nowrap;
+  animation: rise 260ms ease-out;
+}
+.line:hover {
+  background: rgba(110, 160, 215, 0.06);
+}
+.t {
+  color: var(--text-3);
+  white-space: pre;
+}
+.level {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  align-self: center;
+}
+.kind {
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.text {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info .level {
+  color: var(--cyan-2);
+}
+.warn .level {
+  color: var(--amber);
+}
+.warn .text {
+  color: #ffe0b0;
+}
+.crit {
+  background: linear-gradient(90deg, rgba(255, 77, 94, 0.1), transparent 60%);
+}
+.crit .level {
+  color: var(--red);
+}
+.crit .text {
+  color: #ffc0c6;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.critDot,
+.warnDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.critDot {
+  background: var(--red);
+}
+.warnDot {
+  background: var(--amber);
+}

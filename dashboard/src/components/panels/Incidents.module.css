@@ -1,0 +1,160 @@
+.panel {
+  flex: 1;
+  min-height: 0;
+}
+.body {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.openChip {
+  animation: blink 1.4s ease-in-out infinite;
+}
+
+.hero {
+  position: relative;
+  padding: 10px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(63, 227, 242, 0.05), transparent 60%), rgba(3, 8, 16, 0.5);
+}
+.heroOpen {
+  border-color: rgba(255, 77, 94, 0.45);
+  background: linear-gradient(180deg, rgba(255, 77, 94, 0.1), transparent 70%), rgba(3, 8, 16, 0.5);
+}
+.heroHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.id {
+  color: var(--text-3);
+  font-size: 11px;
+}
+.cause {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0 8px;
+}
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.metricLabel {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.big {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.05;
+  color: #eafcff;
+  text-shadow: 0 0 18px rgba(63, 227, 242, 0.35);
+}
+.big small {
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 3px;
+  color: var(--text-2);
+  text-shadow: none;
+}
+.bgp {
+  color: #dccfff;
+  text-shadow: 0 0 18px rgba(167, 123, 255, 0.35);
+}
+
+.na {
+  color: var(--text-4);
+  text-shadow: none;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.footer b {
+  color: var(--text);
+  font-weight: 600;
+}
+.footer b.warn {
+  color: var(--amber);
+}
+.footer b.bad {
+  color: var(--red);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: grid;
+  grid-template-columns: 8px 28px minmax(0, 1fr) 54px 54px 40px;
+  align-items: center;
+  gap: 6px;
+  height: 25px;
+  padding: 0 4px;
+  font-size: 10.5px;
+  border-bottom: 1px solid var(--line);
+}
+.row:last-child {
+  border-bottom: 0;
+}
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan-2);
+}
+.dotOpen {
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+}
+.rowId {
+  color: var(--text-3);
+}
+.rowCause {
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rowNum {
+  text-align: right;
+  color: var(--text);
+}
+.rowNum small {
+  color: var(--text-3);
+  margin-left: 2px;
+}
+.rowNum.bgp {
+  color: #cdbcff;
+  text-shadow: none;
+}
+.rowLoss {
+  text-align: right;
+  color: var(--amber);
+}
