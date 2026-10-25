@@ -52,7 +52,13 @@ pub struct Flow {
     pub latency_s: f64,
     pub loss: f64,
     pub delivered_bps: f64,
+    /// When an endpoint of this flow died. Clients give up after a grace
+    /// period instead of retrying a dead box forever.
+    pub dead_since: Option<Nanos>,
 }
+
+/// How long a client keeps trying a dead endpoint before giving up.
+const GIVE_UP: Nanos = 3 * crate::time::SEC;
 
 #[derive(Clone, Debug)]
 pub struct TrafficConfig {
@@ -131,18 +137,30 @@ impl Traffic {
         (topo.host_router[h as usize], topo.host_rate_bps[h as usize] as f64)
     }
 
-    fn replica_for(&mut self, topo: &Topology, svc: ServiceId, user: RouterId) -> RouterId {
-        *self.nearest.entry((svc.0, user.0)).or_insert_with(|| {
-            let u = topo.router(user);
-            *topo.services[svc.idx()]
-                .replicas
-                .iter()
-                .min_by(|&&a, &&b| {
-                    let (ra, rb) = (topo.router(a), topo.router(b));
-                    haversine_km(u.lat, u.lon, ra.lat, ra.lon).total_cmp(&haversine_km(u.lat, u.lon, rb.lat, rb.lon))
-                })
-                .expect("service without replicas")
-        })
+    /// Closest live replica, the way a health-checked GSLB answers. If every
+    /// replica is down we still hand out the nearest one; the flow will fail,
+    /// which is the honest outcome.
+    fn replica_for(&mut self, topo: &Topology, alive: &[bool], svc: ServiceId, user: RouterId) -> RouterId {
+        if let Some(&r) = self.nearest.get(&(svc.0, user.0)) {
+            if alive[r.idx()] {
+                return r;
+            }
+        }
+        let u = topo.router(user);
+        let dist = |r: RouterId| {
+            let rr = topo.router(r);
+            haversine_km(u.lat, u.lon, rr.lat, rr.lon)
+        };
+        let replicas = &topo.services[svc.idx()].replicas;
+        let best = replicas
+            .iter()
+            .copied()
+            .filter(|r| alive[r.idx()])
+            .min_by(|&a, &b| dist(a).total_cmp(&dist(b)))
+            .or_else(|| replicas.iter().copied().min_by(|&a, &b| dist(a).total_cmp(&dist(b))))
+            .expect("service without replicas");
+        self.nearest.insert((svc.0, user.0), best);
+        best
     }
 
     fn push(&mut self, kind: FlowKind, src: RouterId, dst: RouterId, demand_bps: f64, ends_at: Nanos) {
@@ -161,16 +179,17 @@ impl Traffic {
             latency_s: 0.0,
             loss: 0.0,
             delivered_bps: 0.0,
+            dead_since: None,
         });
     }
 
-    fn background(&mut self, topo: &Topology, now: Nanos, duration_s: f64) {
+    fn background(&mut self, topo: &Topology, alive: &[bool], now: Nanos, duration_s: f64) {
         let (user, user_rate) = self.random_user(topo);
         let demand = self.rng.lognormal(self.cfg.rate_median_bps, self.cfg.rate_sigma);
         let ends = now + from_secs(duration_s);
         if !topo.services.is_empty() && self.rng.chance(self.cfg.service_share) {
             let svc = ServiceId::from_idx(self.popularity.sample(&mut self.rng));
-            let server = self.replica_for(topo, svc, user);
+            let server = self.replica_for(topo, alive, svc, user);
             self.push(FlowKind::Background, server, user, demand.min(user_rate), ends);
         } else {
             let (peer, peer_rate) = self.random_user(topo);
@@ -181,10 +200,10 @@ impl Traffic {
     /// Start in steady state rather than with an empty network. Remaining
     /// lifetimes of a population of exponential flows are themselves
     /// exponential, so this is exact.
-    pub fn prefill(&mut self, topo: &Topology, now: Nanos) {
+    pub fn prefill(&mut self, topo: &Topology, alive: &[bool], now: Nanos) {
         for _ in 0..self.cfg.concurrent {
             let d = self.rng.exp(self.cfg.mean_duration_s);
-            self.background(topo, now, d);
+            self.background(topo, alive, now, d);
         }
     }
 
@@ -215,8 +234,17 @@ impl Traffic {
     }
 
     /// Drop finished flows and create new ones. Returns how many arrived.
-    pub fn step(&mut self, topo: &Topology, now: Nanos, dt: f64) -> usize {
-        self.flows.retain(|f| f.ends_at > now);
+    pub fn step(&mut self, topo: &Topology, alive: &[bool], now: Nanos, dt: f64) -> usize {
+        for f in &mut self.flows {
+            let dead = !alive[f.src.idx()] || !alive[f.dst.idx()];
+            f.dead_since = match (dead, f.dead_since) {
+                (false, _) => None,
+                (true, None) => Some(now),
+                (true, since) => since,
+            };
+        }
+        self.flows
+            .retain(|f| f.ends_at > now && f.dead_since.is_none_or(|t| now - t < GIVE_UP));
 
         let rate = self.cfg.concurrent as f64 / self.cfg.mean_duration_s;
         // The arrival *count* per step is deterministic (fractional part
@@ -227,7 +255,7 @@ impl Traffic {
         self.carry = expected - n as f64;
         for _ in 0..n {
             let d = self.rng.exp(self.cfg.mean_duration_s);
-            self.background(topo, now, d);
+            self.background(topo, alive, now, d);
         }
 
         let mut spawn = Vec::new();
@@ -249,7 +277,7 @@ impl Traffic {
         for (kind, svc, k, rate_bps, end) in spawn {
             for _ in 0..k {
                 let (user, user_rate) = self.random_user(topo);
-                let replica = self.replica_for(topo, svc, user);
+                let replica = self.replica_for(topo, alive, svc, user);
                 // Not every member of a crowd leaves at the same instant.
                 let jitter = from_secs(self.rng.range_f64(0.0, 3.0));
                 let demand = rate_bps.min(user_rate);

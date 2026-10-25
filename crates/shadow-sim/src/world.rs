@@ -243,7 +243,7 @@ impl World {
         self.epoch = self.q.now();
         self.next_sample = self.epoch + SEC;
         self.rate_mark = (self.epoch, self.q.processed, self.qr.updates);
-        self.traffic.prefill(&self.topo, self.epoch);
+        self.traffic.prefill(&self.topo, &self.alive, self.epoch);
         self.q.at(self.epoch, Event::Tick);
         let boot_s = to_secs(self.epoch);
         self.info(
@@ -499,7 +499,7 @@ impl World {
     fn tick(&mut self) {
         let now = self.q.now();
         let dt = to_secs(self.timers.tick);
-        self.traffic.step(&self.topo, now, dt);
+        self.traffic.step(&self.topo, &self.alive, now, dt);
 
         // Q-routing learns all the time, whichever protocol is forwarding,
         // so it is warm the moment you switch to it.
