@@ -304,6 +304,10 @@ pub struct TopologySummary {
 // Generation
 // ---------------------------------------------------------------------------
 
+// Capacities are those of a smaller internet than the real one (a real
+// tier-1 backbone is many parallel 400G waves). What matters is the ratio
+// to the offered load, which is tuned so busy backbones run at 20-50% and a
+// few edges run hot, the way they do in practice.
 const GBPS: f64 = 1e9;
 
 const NAME_HEADS: &[&str] = &[
@@ -602,11 +606,11 @@ impl Builder {
             let n = if geo::city(c).hub >= 0.9 { 2 } else { 1 };
             let rs: Vec<_> = (0..n).map(|_| self.new_router(rng, id, c, RouterRole::Core)).collect();
             if n == 2 {
-                self.connect(rs[0], rs[1], LinkKind::Internal, 400.0 * GBPS);
+                self.connect(rs[0], rs[1], LinkKind::Internal, 100.0 * GBPS);
             }
             groups.push((c, rs));
         }
-        self.backbone(&groups, 2, 400.0 * GBPS);
+        self.backbone(&groups, 2, 100.0 * GBPS);
         id
     }
 
@@ -623,11 +627,11 @@ impl Builder {
             let n = if i == 0 { 2 } else { 1 };
             let rs: Vec<_> = (0..n).map(|_| self.new_router(rng, id, c, RouterRole::Core)).collect();
             if n == 2 {
-                self.connect(rs[0], rs[1], LinkKind::Internal, 100.0 * GBPS);
+                self.connect(rs[0], rs[1], LinkKind::Internal, 40.0 * GBPS);
             }
             groups.push((c, rs));
         }
-        self.backbone(&groups, 1, 100.0 * GBPS);
+        self.backbone(&groups, 1, 40.0 * GBPS);
         id
     }
 
@@ -643,10 +647,10 @@ impl Builder {
         let id = self.new_as(rng, Tier::Stub, region, home, hosting);
 
         let (n_border, n_edge, edge_role, cap) = if hosting {
-            (2, 2, RouterRole::Datacenter, 100.0 * GBPS)
+            (2, 2, RouterRole::Datacenter, 40.0 * GBPS)
         } else {
             let n_border = if rng.chance(0.6) { 2 } else { 1 };
-            (n_border, 2 + rng.below(3), RouterRole::Access, 40.0 * GBPS)
+            (n_border, 2 + rng.below(3), RouterRole::Access, 10.0 * GBPS)
         };
         let borders: Vec<_> = (0..n_border)
             .map(|_| self.new_router(rng, id, home, RouterRole::Border))
@@ -737,14 +741,14 @@ impl Builder {
                 let mut made = 0;
                 for &c in shared.iter().take(3) {
                     let (ra, rb) = (self.routers_in(a, c), self.routers_in(b, c));
-                    if self.connect(ra[0], rb[0], LinkKind::Peering, 100.0 * GBPS).is_some() {
+                    if self.connect(ra[0], rb[0], LinkKind::Peering, 40.0 * GBPS).is_some() {
                         made += 1;
                     }
                 }
                 if made == 0 {
                     let a_side = self.ases[a.idx()].routers.clone();
                     for (x, y, _) in self.closest_pairs(&a_side, b, 2) {
-                        self.connect(x, y, LinkKind::Peering, 100.0 * GBPS);
+                        self.connect(x, y, LinkKind::Peering, 40.0 * GBPS);
                     }
                 }
                 self.relate(a, b, Relationship::Peer);
@@ -774,7 +778,7 @@ impl Builder {
             let a_side = self.ases[a.idx()].routers.clone();
             let n_links = if rng.chance(0.5) { 2 } else { 1 };
             for (x, y, _) in self.closest_pairs(&a_side, p, n_links) {
-                self.connect(x, y, LinkKind::Transit, 100.0 * GBPS);
+                self.connect(x, y, LinkKind::Transit, 40.0 * GBPS);
             }
             self.relate(a, p, Relationship::Provider);
         }
@@ -788,7 +792,7 @@ impl Builder {
                 }
                 let a_side = self.ases[a.idx()].routers.clone();
                 if let Some(&(x, y, _)) = self.closest_pairs(&a_side, b, 1).first() {
-                    self.connect(x, y, LinkKind::Peering, 40.0 * GBPS);
+                    self.connect(x, y, LinkKind::Peering, 10.0 * GBPS);
                     self.relate(a, b, Relationship::Peer);
                 }
             }
@@ -834,9 +838,9 @@ impl Builder {
         }
 
         let cap = if hosting {
-            100.0 * GBPS
-        } else if rng.chance(0.25) {
             40.0 * GBPS
+        } else if rng.chance(0.25) {
+            20.0 * GBPS
         } else {
             10.0 * GBPS
         };
