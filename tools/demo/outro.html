@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ShadowNet</title>
+<style>
+  :root { --bg: #04070d; --fg: #f1f5f9; --dim: #64748b; }
+  html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+  body { display: grid; place-items: center; font-family: "SF Mono", Menlo, Consolas, monospace; color: var(--fg); }
+  canvas { position: fixed; inset: 0; }
+  .card { position: relative; text-align: center; }
+  .thanks { font-size: 88px; font-weight: 800; letter-spacing: .08em; opacity: 0;
+            animation: rise 1.2s cubic-bezier(.2,.8,.2,1) .2s forwards; text-shadow: 0 0 40px rgba(34,211,238,.3); }
+  .line { font-size: 24px; color: #7dd3fc; margin-top: 22px; opacity: 0; animation: fade 1s ease 1.1s forwards; }
+  .repo { font-size: 22px; color: var(--fg); margin-top: 46px; opacity: 0; animation: fade 1s ease 1.8s forwards;
+          padding: 12px 22px; border: 1px solid #1e3a4c; border-radius: 10px; display: inline-block; background: #07111c; }
+  .by { margin-top: 60px; font-size: 22px; color: var(--dim); letter-spacing: .3em; text-transform: uppercase;
+        opacity: 0; animation: fade 1s ease 2.4s forwards; }
+  .by b { color: var(--fg); font-weight: 600; letter-spacing: .12em; }
+  @keyframes rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  @keyframes fade { to { opacity: 1; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="card">
+  <div class="thanks">Thank you for watching</div>
+  <div class="line">100,000 nodes &middot; OSPF &middot; RIP &middot; BGP &middot; Q-routing &middot; failure prediction</div>
+  <div class="repo">github.com/amartya1523/ShadowNet</div>
+  <div class="by">made by <b>Amartya Vikram Singh</b></div>
+</div>
+<script src="network-bg.js"></script>
+</body>
+</html>

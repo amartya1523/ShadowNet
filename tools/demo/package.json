@@ -1,0 +1,13 @@
+{
+  "name": "shadownet-demo",
+  "private": true,
+  "type": "module",
+  "description": "Records media/shadownet-demo.mp4 by driving the dashboard",
+  "scripts": {
+    "record": "node record.mjs"
+  },
+  "devDependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "playwright-core": "1.64.1"
+  }
+}

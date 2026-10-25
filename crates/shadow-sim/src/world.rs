@@ -87,6 +87,7 @@ struct Incident {
 }
 
 const INCIDENT_QUIET: Nanos = 2 * SEC;
+const MERGE_WINDOW: Nanos = SEC;
 const HISTORY_LEN: usize = 600;
 const FLOW_SAMPLE: usize = 260;
 
@@ -598,9 +599,17 @@ impl World {
     fn open_incident(&mut self, cause: String) {
         let now = self.q.now();
         if let Some(inc) = self.incidents.front_mut().filter(|i| i.open) {
-            inc.causes += 1;
-            inc.last_activity = now;
-            return;
+            // Failures within a second of each other are one event (a cable
+            // ship, a crashed chassis). Anything later is a new incident;
+            // otherwise a steady trickle of failures never goes quiet and
+            // one incident absorbs them all, with a meaningless
+            // "convergence time" of minutes.
+            if now - inc.t0 <= MERGE_WINDOW {
+                inc.causes += 1;
+                inc.last_activity = now;
+                return;
+            }
+            inc.open = false;
         }
         self.incidents.push_front(Incident {
             id: self.next_incident,
