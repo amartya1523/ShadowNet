@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.4.0"
+edition = "2024"
+license = "MIT"
+authors = ["Amartya Vikram Singh"]
+repository = "https://github.com/amartya1523/ShadowNet"
+rust-version = "1.85"
+
+[workspace.dependencies]
+shadow-graph = { path = "crates/shadow-graph" }
+shadow-sim = { path = "crates/shadow-sim" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+debug = "line-tables-only"
+
+# Topology generation and routing convergence are slow enough in a plain
+# debug build that running the test-suite becomes annoying.
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.dev]
+opt-level = 1
