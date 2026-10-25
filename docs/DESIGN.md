@@ -141,21 +141,40 @@ Scripted (scenario TOML) or interactive (dashboard):
 * link cut / restore, router crash / recover, whole-AS outage
 * latency spike (+N ms for D seconds), packet loss injection
 * DDoS and flash crowds
-* "Chaos monkey": a hazard process per link,
-  `lambda = base * fragility * (1 + k1 * max(0, util_ewma - 0.75)^2 + k2 * recent_flaps)`.
-  Overloaded, flappy, fragile links fail more. This is synthetic, and the
-  README says so, but it gives the predictor something real to find.
+* "Chaos monkey". My first version was a plain hazard process per link
+  (rate driven by utilisation, recent flaps and a hidden fragility). It was
+  useless for prediction, and measuring why was instructive: links with a
+  recent flap were 2.4% of the population and 6.3% of failures. Real, but far
+  too little observable signal; no model could beat a coin by much.
+  Real circuits mostly do not die out of a clear sky. Optics age, connectors
+  loosen, a bent fibre leaks light, and interface error counters climb for a
+  while first. So the monkey now has two kinds of failure:
+  - **wear-out** (70% of the budget): the link starts degrading, its bit-error
+    rate rising quadratically over 20-80 s to somewhere between 0.2% and 3%.
+    Three quarters of these end in a hard failure; the rest recover on their
+    own. Onset rate = base x fragility x
+    `(1 + 40 * max(0, util - 0.6)^2 + 3 * flap_heat)`;
+  - **sudden** (30%): base x fragility, no warning, nothing to predict.
+
+  This is synthetic and the README says so. What makes it a fair test is
+  that the predictor never sees the wear state, only the error counter an
+  operator would, and that both false alarms and unannounced failures exist.
 
 ## 7. Failure prediction
 
 Online logistic regression over per-link features a NOC would have:
-utilisation EWMA (fast and slow), peak utilisation, queue occupancy, loss,
-latency jitter, flap count in the last minute, time since last failure, and
-static betweenness. Labels are "this link went down within the next H
-seconds". Feature snapshots go into a ring buffer and are labelled once the
-horizon passes, so the model only ever learns from the past. Reported
-online: ROC-AUC over a sliding window, precision@10, against a
-utilisation-only baseline.
+utilisation EWMA (fast and slow), peak utilisation, queue occupancy,
+congestion drops, interface errors (log scale) and their trend against a
+slow baseline, latency jitter, flaps in the last two minutes, time since the
+last failure, and static betweenness. Labels are "this link went down
+(unplanned) within the next 20 seconds". Feature snapshots go into a ring
+buffer and are labelled once the horizon passes, so the model only ever
+learns from the past. Positives are up-weighted by the running class ratio,
+capped at 20: with an uncapped weight a single positive moves the model
+further than a thousand negatives pull it back, and the first version
+oscillated around an AUC of 0.5 for exactly that reason. Reported online:
+ROC-AUC over the last 60 000 labelled samples, precision@10, and the same
+AUC for a utilisation-only baseline.
 
 ## 8. Process layout
 
