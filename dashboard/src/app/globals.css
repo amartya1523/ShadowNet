@@ -1,0 +1,160 @@
+:root {
+  --bg: #03060c;
+  --bg-1: #060b15;
+  --bg-2: #0a1322;
+  --bg-3: #0f1b2e;
+  --panel: linear-gradient(180deg, rgba(11, 20, 36, 0.94) 0%, rgba(6, 11, 21, 0.94) 100%);
+  --line: rgba(110, 160, 215, 0.12);
+  --line-2: rgba(110, 175, 230, 0.22);
+  --line-3: rgba(120, 200, 245, 0.38);
+
+  --text: #d5e3f1;
+  --text-2: #92a8c0;
+  --text-3: #5a7189;
+  --text-4: #3a4c61;
+
+  --cyan: #3fe3f2;
+  --cyan-2: #23b6c9;
+  --cyan-soft: rgba(63, 227, 242, 0.14);
+  --teal: #34d8b5;
+  --amber: #ffb547;
+  --amber-soft: rgba(255, 181, 71, 0.14);
+  --red: #ff4d5e;
+  --red-soft: rgba(255, 77, 94, 0.15);
+  --violet: #a77bff;
+  --violet-2: #7c57e8;
+  --violet-soft: rgba(167, 123, 255, 0.15);
+  --magenta: #ff4f9a;
+
+  --radius: 3px;
+  --gap: 10px;
+  --rail-left: 300px;
+  --rail-right: 380px;
+  --topbar: 58px;
+  --log-height: 172px;
+
+  --font-sans: var(--font-space), "Space Grotesk", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
+}
+
+@media (max-width: 1600px) {
+  :root {
+    --rail-left: 268px;
+    --rail-right: 340px;
+    --log-height: 150px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(40, 110, 170, 0.18), transparent 70%),
+    radial-gradient(900px 500px at 100% 110%, rgba(100, 70, 200, 0.08), transparent 70%),
+    linear-gradient(rgba(90, 140, 200, 0.035) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(90, 140, 200, 0.035) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--bg);
+}
+
+/* CRT-ish scanlines over everything. Kept very faint: it should read as texture, not effect. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.018) 0,
+    rgba(255, 255, 255, 0.018) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: rgba(63, 227, 242, 0.3);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(110, 160, 215, 0.18);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(110, 160, 215, 0.32);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
