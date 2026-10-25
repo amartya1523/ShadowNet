@@ -1,0 +1,93 @@
+.card {
+  padding: 10px 12px;
+  border: 1px solid var(--line-3);
+  border-radius: var(--radius);
+  background: rgba(5, 11, 22, 0.94);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(63, 227, 242, 0.05), 0 0 24px -10px rgba(63, 227, 242, 0.4);
+  backdrop-filter: blur(6px);
+  animation: rise 120ms ease-out;
+}
+.kicker {
+  display: flex;
+  gap: 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 5px;
+}
+.tier {
+  font-weight: 700;
+}
+.tier1 {
+  color: #e9fbff;
+}
+.tier2 {
+  color: var(--cyan);
+}
+.stub {
+  color: #7f9fc4;
+}
+.up {
+  color: var(--teal);
+}
+.degraded {
+  color: var(--amber);
+}
+.down {
+  color: var(--red);
+  font-weight: 700;
+}
+.name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f0f8ff;
+  line-height: 1.35;
+  word-break: break-all;
+}
+.sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+.utilBar {
+  height: 3px;
+  margin: 8px 0 2px;
+  background: rgba(110, 160, 215, 0.12);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.utilBar span {
+  display: block;
+  height: 100%;
+  box-shadow: 0 0 8px currentColor;
+}
+.grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 12px;
+  margin: 8px 0 0;
+  font-size: 10.5px;
+}
+.grid dt {
+  color: var(--text-3);
+}
+.grid dd {
+  margin: 0;
+  text-align: right;
+  color: var(--text);
+}
+.risk {
+  color: #d2bdff !important;
+}
+.lossy {
+  color: var(--amber) !important;
+}
+.hint {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  font-size: 9.5px;
+  color: var(--text-4);
+  letter-spacing: 0.04em;
+}

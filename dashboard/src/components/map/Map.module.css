@@ -1,0 +1,280 @@
+.map {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 45%, rgba(20, 60, 100, 0.22), transparent 75%),
+    linear-gradient(180deg, #050b16, #03070e);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 40px -24px rgba(63, 227, 242, 0.4);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.tracing .canvas {
+  cursor: crosshair !important;
+}
+.tracing {
+  border-color: rgba(110, 235, 255, 0.45);
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 85% 80% at 50% 50%, transparent 60%, rgba(2, 5, 10, 0.6) 100%);
+}
+
+.hudTop {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(4, 9, 18, 0.72);
+}
+.hudTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+  animation: blink 1.6s ease-in-out infinite;
+}
+.hudMeta {
+  font-size: 9.5px;
+  color: var(--text-3);
+}
+
+.toolbar {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+}
+.toolGroup {
+  display: flex;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: rgba(4, 9, 18, 0.82);
+}
+.toolGroup .tool {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  width: 30px;
+  padding: 0;
+}
+.toolGroup .tool + .tool {
+  border-left: 1px solid var(--line);
+}
+.tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: rgba(4, 9, 18, 0.82);
+  color: var(--text-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+.tool:hover:not(:disabled) {
+  color: var(--text);
+  background: rgba(20, 40, 66, 0.9);
+}
+.tool:disabled {
+  opacity: 0.4;
+}
+.toolActive {
+  color: #031015 !important;
+  border-color: transparent;
+  background: linear-gradient(180deg, #8ff4ff, #34cfe0) !important;
+  box-shadow: 0 0 18px -4px rgba(110, 235, 255, 0.8);
+}
+
+.traceHint {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border: 1px solid rgba(110, 235, 255, 0.5);
+  border-radius: var(--radius);
+  background: rgba(4, 16, 26, 0.9);
+  color: #bff7ff;
+  font-size: 11px;
+  pointer-events: none;
+  animation: rise 160ms ease-out;
+}
+.kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--line-3);
+  border-radius: 2px;
+  font-size: 9px;
+  color: var(--text-2);
+}
+
+/* Trace and inspector stack on the right so the Americas stay visible. */
+.dock {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 54px;
+  width: 352px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.dock > * {
+  pointer-events: auto;
+}
+
+.tipAnchor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 8;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.notice {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 7;
+  transform: translateX(-50%);
+  padding: 7px 14px;
+  border: 1px solid rgba(63, 227, 242, 0.45);
+  border-radius: var(--radius);
+  background: rgba(4, 16, 26, 0.94);
+  color: #bff7ff;
+  font-size: 11px;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: notice 3.2s ease forwards;
+}
+.noticeError {
+  border-color: rgba(255, 77, 94, 0.6);
+  background: rgba(30, 6, 12, 0.94);
+  color: #ffb3ba;
+}
+
+@keyframes notice {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+  6%,
+  80% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 0);
+  }
+}
+
+.connecting {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: radial-gradient(circle at 50% 50%, rgba(10, 30, 50, 0.6), rgba(3, 7, 14, 0.85) 60%);
+}
+.radar {
+  position: relative;
+  width: 92px;
+  height: 92px;
+}
+.radar span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(63, 227, 242, 0.5);
+  animation: radar 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.radar span:nth-child(2) {
+  animation-delay: 0.8s;
+}
+.radar span:nth-child(3) {
+  animation-delay: 1.6s;
+}
+.radar::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 16px var(--cyan);
+}
+@keyframes radar {
+  from {
+    transform: scale(0.1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+.connectingText {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+.connectingAddr {
+  font-size: 10.5px;
+  color: var(--text-3);
+}

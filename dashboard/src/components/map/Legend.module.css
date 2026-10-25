@@ -1,0 +1,118 @@
+.legend {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 3;
+  display: flex;
+  gap: 18px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(4, 9, 18, 0.78);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.heading {
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 1px;
+}
+.ramp {
+  width: 128px;
+  height: 4px;
+  border-radius: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(40, 110, 150, 0.5) 0%,
+    rgb(40, 175, 205) 24%,
+    rgb(70, 230, 235) 52%,
+    rgb(255, 196, 80) 71%,
+    rgb(255, 140, 60) 86%,
+    rgb(255, 70, 85) 100%
+  );
+}
+.scale {
+  display: flex;
+  justify-content: space-between;
+  width: 128px;
+  font-size: 8.5px;
+  color: var(--text-3);
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.lineDegraded,
+.lineDown,
+.lineRisk {
+  width: 16px;
+  height: 0;
+  border-top: 1.5px dashed var(--amber);
+}
+.lineDown {
+  border-top-color: var(--red);
+}
+.lineRisk {
+  height: 4px;
+  border: 0;
+  border-radius: 2px;
+  background: rgba(167, 123, 255, 0.6);
+  box-shadow: 0 0 6px var(--violet);
+}
+.t1,
+.t2,
+.stub,
+.dc {
+  width: 6px;
+  height: 6px;
+  margin: 0 5px;
+  flex: none;
+}
+.t1 {
+  border-radius: 50%;
+  background: #e9fbff;
+  box-shadow: 0 0 6px rgba(120, 230, 255, 0.9);
+}
+.t2 {
+  width: 4.5px;
+  height: 4.5px;
+  border-radius: 50%;
+  background: #5fd4e0;
+}
+.stub {
+  width: 3px;
+  height: 3px;
+  background: #4a6c92;
+}
+.dc {
+  border: 1px solid #f1f5ff;
+}
+.pkt {
+  width: 6px;
+  height: 6px;
+  margin: 0 5px;
+  border-radius: 50%;
+}
+.bg {
+  background: #c4f6ff;
+  box-shadow: 0 0 6px 1px rgba(150, 240, 255, 0.9);
+}
+.crowd {
+  background: #ffd9a0;
+  box-shadow: 0 0 6px 1px rgba(255, 190, 80, 0.9);
+}
+.attack {
+  background: #ffa0c8;
+  box-shadow: 0 0 6px 1px rgba(255, 70, 150, 0.9);
+}
