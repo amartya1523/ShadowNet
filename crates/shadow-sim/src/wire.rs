@@ -11,10 +11,18 @@ use crate::world::RoutingMode;
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
 pub enum Command {
-    FailLink { link: u32 },
-    RestoreLink { link: u32 },
-    FailRouter { router: u32 },
-    RestoreRouter { router: u32 },
+    FailLink {
+        link: u32,
+    },
+    RestoreLink {
+        link: u32,
+    },
+    FailRouter {
+        router: u32,
+    },
+    RestoreRouter {
+        router: u32,
+    },
     FailAs {
         #[serde(rename = "as")]
         asys: u16,
@@ -23,9 +31,22 @@ pub enum Command {
         #[serde(rename = "as")]
         asys: u16,
     },
-    LatencySpike { link: u32, ms: f64, secs: f64 },
-    PacketLoss { link: u32, pct: f64, secs: f64 },
-    Ddos { service: u16, bots: usize, mbps: f64, secs: f64 },
+    LatencySpike {
+        link: u32,
+        ms: f64,
+        secs: f64,
+    },
+    PacketLoss {
+        link: u32,
+        pct: f64,
+        secs: f64,
+    },
+    Ddos {
+        service: u16,
+        bots: usize,
+        mbps: f64,
+        secs: f64,
+    },
     FlashCrowd {
         service: u16,
         users: usize,
@@ -39,18 +60,24 @@ pub enum Command {
         #[serde(rename = "perMinute", default)]
         per_minute: Option<f64>,
     },
-    SetRouting { mode: RoutingMode },
+    SetRouting {
+        mode: RoutingMode,
+    },
     HealAll,
     // The rest are about the run, not the network; the server's runner
     // handles them and the world never sees them.
-    SetSpeed { speed: f64 },
+    SetSpeed {
+        speed: f64,
+    },
     Pause,
     Resume,
     Reset {
         #[serde(default)]
         seed: Option<u64>,
     },
-    RunScenario { name: String },
+    RunScenario {
+        name: String,
+    },
 }
 
 // -- topology -----------------------------------------------------------------
@@ -176,13 +203,7 @@ impl TopologyView {
             },
             cities: CITIES
                 .iter()
-                .map(|c| CityView {
-                    code: c.code,
-                    name: c.name,
-                    lat: c.lat,
-                    lon: c.lon,
-                    region: c.region.code(),
-                })
+                .map(|c| CityView { code: c.code, name: c.name, lat: c.lat, lon: c.lon, region: c.region.code() })
                 .collect(),
             ases: topo
                 .ases

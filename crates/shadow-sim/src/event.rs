@@ -13,24 +13,63 @@ pub enum Event {
     /// Advance the fluid data plane by one step.
     Tick,
     /// One end of a link has noticed it changed state.
-    Detect { link: LinkId, end: u8, up: bool },
+    Detect {
+        link: LinkId,
+        end: u8,
+        up: bool,
+    },
 
-    Lsa { to: RouterId, via: LinkId, lsa: Arc<Lsa> },
-    Spf { router: RouterId },
-    FibInstall { router: RouterId, next: Box<[u32]>, cost: Box<[u32]> },
+    Lsa {
+        to: RouterId,
+        via: LinkId,
+        lsa: Arc<Lsa>,
+    },
+    Spf {
+        router: RouterId,
+    },
+    FibInstall {
+        router: RouterId,
+        next: Box<[u32]>,
+        cost: Box<[u32]>,
+    },
 
-    DvSend { router: RouterId },
-    DvPeriodic { router: RouterId },
-    DvRecv { to: RouterId, via: LinkId, vector: Arc<[u8]> },
+    DvSend {
+        router: RouterId,
+    },
+    DvPeriodic {
+        router: RouterId,
+    },
+    DvRecv {
+        to: RouterId,
+        via: LinkId,
+        vector: Arc<[u8]>,
+    },
 
-    Bgp { to: AsId, from: AsId, epoch: u32, update: Arc<Update> },
-    Mrai { asys: AsId, neighbor: u16 },
+    Bgp {
+        to: AsId,
+        from: AsId,
+        epoch: u32,
+        update: Arc<Update>,
+    },
+    Mrai {
+        asys: AsId,
+        neighbor: u16,
+    },
 
     /// A latency spike or loss injection on `link` wears off.
-    Clear { link: LinkId, token: u32 },
+    Clear {
+        link: LinkId,
+        token: u32,
+    },
     /// Automatic repair after a chaos-monkey failure.
-    Repair { link: LinkId, token: u32 },
-    ScenarioStep { run: u32, step: usize },
+    Repair {
+        link: LinkId,
+        token: u32,
+    },
+    ScenarioStep {
+        run: u32,
+        step: usize,
+    },
 }
 
 struct Entry {

@@ -44,12 +44,7 @@ impl LinkStateIgp {
     pub fn new(v: &View) -> Self {
         let n = v.topo.routers.len();
         LinkStateIgp {
-            lsdb: v
-                .topo
-                .routers
-                .iter()
-                .map(|r| vec![None; v.layout.per_as[r.asys.idx()].routers.len()])
-                .collect(),
+            lsdb: v.topo.routers.iter().map(|r| vec![None; v.layout.per_as[r.asys.idx()].routers.len()]).collect(),
             own_seq: vec![0; n],
             spf_pending: vec![false; n],
             last_spf: vec![None; n],
@@ -77,12 +72,7 @@ impl LinkStateIgp {
             }
         }
         self.own_seq[r.idx()] += 1;
-        Arc::new(Lsa {
-            origin: r,
-            seq: self.own_seq[r.idx()],
-            adj,
-            exits,
-        })
+        Arc::new(Lsa { origin: r, seq: self.own_seq[r.idx()], adj, exits })
     }
 
     /// Re-describe `r`'s links and flood the result. Called whenever one of
@@ -105,14 +95,7 @@ impl LinkStateIgp {
                 continue;
             }
             let delay = crate::time::from_secs(v.links.propagation(l)) + v.timers.lsa_processing;
-            q.after(
-                delay,
-                Event::Lsa {
-                    to: n,
-                    via: l,
-                    lsa: lsa.clone(),
-                },
-            );
+            q.after(delay, Event::Lsa { to: n, via: l, lsa: lsa.clone() });
         }
     }
 
@@ -159,14 +142,7 @@ impl LinkStateIgp {
         }
         let delay = crate::time::from_secs(v.links.propagation(l)) + v.timers.lsa_processing;
         for lsa in self.lsdb[r.idx()].iter().flatten() {
-            q.after(
-                delay,
-                Event::Lsa {
-                    to: n,
-                    via: l,
-                    lsa: lsa.clone(),
-                },
-            );
+            q.after(delay, Event::Lsa { to: n, via: l, lsa: lsa.clone() });
         }
     }
 
@@ -257,9 +233,7 @@ impl LinkStateIgp {
     /// A crash loses all protocol state. The neighbours notice the dead
     /// adjacencies through link detection, not through anything we send.
     pub fn router_down(&mut self, r: RouterId) {
-        for slot in &mut self.lsdb[r.idx()] {
-            *slot = None;
-        }
+        self.lsdb[r.idx()].fill(None);
         self.fib.clear_router(r);
         // Sequence numbers do not survive a reboot either; the fight-back
         // path in `receive` handles the consequences.

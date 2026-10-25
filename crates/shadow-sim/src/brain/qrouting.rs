@@ -107,20 +107,9 @@ impl QRouting {
                 .collect();
             exit_target.push(actions.iter().map(|a| a.exit.and_then(|b| lay.exit_target(b))).collect());
             let t = lay.targets();
-            routers.push(RouterQ {
-                q: vec![f32::INFINITY; t * actions.len()],
-                v: vec![f32::INFINITY; t],
-                actions,
-            });
+            routers.push(RouterQ { q: vec![f32::INFINITY; t * actions.len()], v: vec![f32::INFINITY; t], actions });
         }
-        let mut qr = QRouting {
-            routers,
-            exit_target,
-            alpha: 0.25,
-            updates: 0,
-            td_sum: 0.0,
-            td_n: 0,
-        };
+        let mut qr = QRouting { routers, exit_target, alpha: 0.25, updates: 0, td_sum: 0.0, td_n: 0 };
         qr.warm_start(v);
         qr
     }
@@ -192,10 +181,7 @@ impl QRouting {
                 rq.v[t] = if t == me {
                     0.0
                 } else {
-                    rq.q[t * n_act..(t + 1) * n_act]
-                        .iter()
-                        .copied()
-                        .fold(f32::INFINITY, f32::min)
+                    rq.q[t * n_act..(t + 1) * n_act].iter().copied().fold(f32::INFINITY, f32::min)
                 };
             }
             self.updates += (n_act * n_t) as u64;
@@ -255,15 +241,10 @@ impl QRouting {
         if k == 0 {
             // Nothing feasible (estimates mid-update). Fall back to argmin;
             // if that loops, the TTL will say so.
-            let ai = row
-                .iter()
-                .enumerate()
-                .min_by(|a, b| a.1.total_cmp(b.1))
-                .map(|(i, _)| i)?;
+            let ai = row.iter().enumerate().min_by(|a, b| a.1.total_cmp(b.1)).map(|(i, _)| i)?;
             return Some(rq.actions[ai].link);
         }
-        let u = (mix(flow_hash ^ (x.0 as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15)) >> 40) as f32
-            / (1u64 << 24) as f32
+        let u = (mix(flow_hash ^ (x.0 as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15)) >> 40) as f32 / (1u64 << 24) as f32
             * total;
         let mut acc = 0.0;
         for j in 0..k {

@@ -64,10 +64,7 @@ impl SimConfig {
     pub fn small(seed: u64) -> Self {
         SimConfig {
             topology: TopologyConfig::small(seed),
-            traffic: TrafficConfig {
-                concurrent: 1500,
-                ..TrafficConfig::default()
-            },
+            traffic: TrafficConfig { concurrent: 1500, ..TrafficConfig::default() },
             ..SimConfig::default()
         }
     }
@@ -105,13 +102,7 @@ fn mix(mut z: u64) -> u64 {
 /// take `&mut self.q` alongside it.
 macro_rules! view {
     ($w:expr) => {
-        View {
-            topo: &$w.topo,
-            layout: &$w.layout,
-            links: &$w.links,
-            alive: &$w.alive,
-            timers: &$w.timers,
-        }
+        View { topo: &$w.topo, layout: &$w.layout, links: &$w.links, alive: &$w.alive, timers: &$w.timers }
     };
 }
 
@@ -161,20 +152,14 @@ impl World {
         let alive = vec![true; topo.routers.len()];
         let timers = cfg.timers.clone();
         let (ls, dv, qr) = {
-            let v = View {
-                topo: &topo,
-                layout: &layout,
-                links: &links,
-                alive: &alive,
-                timers: &timers,
-            };
+            let v = View { topo: &topo, layout: &layout, links: &links, alive: &alive, timers: &timers };
             (LinkStateIgp::new(&v), DistanceVector::new(&v), QRouting::new(&v))
         };
         let seed = topo.config.seed;
         let mut w = World {
             bgp: Bgp::new(&topo, timers.bgp_processing),
-            traffic: Traffic::new(&topo, cfg.traffic.clone(), seed ^ 0x7AFF_1C),
-            monkey: Monkey::new(&topo, seed ^ 0xC4A0_5),
+            traffic: Traffic::new(&topo, cfg.traffic.clone(), seed ^ 0x007A_FF1C),
+            monkey: Monkey::new(&topo, seed ^ 0x000C_4A05),
             predictor: Predictor::new(&topo),
             topo,
             layout,
@@ -567,7 +552,7 @@ impl World {
             inc.blackholed_flow_secs += broken as f64 * dt;
         }
 
-        for l in self.monkey.step(&self.topo, &self.links, dt) {
+        for l in self.monkey.step(&self.topo, &mut self.links, dt) {
             self.set_cut(l, cause::MONKEY, true, false, "failure");
             let st = &mut self.links.state[l.idx()];
             st.repair_token = st.repair_token.wrapping_add(1);
@@ -740,18 +725,15 @@ impl World {
                 check(service < n_services, "service")?;
                 self.campaign(FlowKind::Attack, ServiceId(service), bots, mbps, 2.0, secs);
             }
-            Command::FlashCrowd {
-                service,
-                users,
-                mbps,
-                ramp_secs,
-                secs,
-            } => {
+            Command::FlashCrowd { service, users, mbps, ramp_secs, secs } => {
                 check(service < n_services, "service")?;
                 self.campaign(FlowKind::Crowd, ServiceId(service), users, mbps, ramp_secs, secs);
             }
             Command::ChaosMonkey { enabled, per_minute } => {
                 self.monkey.enabled = enabled;
+                if !enabled {
+                    self.monkey.calm(&mut self.links);
+                }
                 if let Some(p) = per_minute {
                     self.monkey.per_minute = p.max(0.0);
                 }
@@ -810,8 +792,7 @@ impl World {
 
     fn campaign(&mut self, kind: FlowKind, svc: ServiceId, count: usize, mbps: f64, ramp: f64, secs: f64) {
         let now = self.q.now();
-        self.traffic
-            .start_campaign(kind, svc, count, mbps * 1e6, now, from_secs(ramp.max(0.0)), from_secs(secs));
+        self.traffic.start_campaign(kind, svc, count, mbps * 1e6, now, from_secs(ramp.max(0.0)), from_secs(secs));
         let name = self.topo.services[svc.idx()].name.clone();
         let (level, text) = match kind {
             FlowKind::Crowd => ("warn", format!("flash crowd: {count} users hitting {name} at {mbps} Mbps each")),
@@ -837,6 +818,7 @@ impl World {
             }
         }
         self.monkey.enabled = false;
+        self.monkey.calm(&mut self.links);
         self.traffic.stop_campaigns(self.q.now());
         self.info("heal", "all faults cleared".to_string());
     }
@@ -904,7 +886,8 @@ impl World {
         let Some(step) = self.scenario.as_ref().and_then(|s| s.steps.get(i)).cloned() else {
             return;
         };
-        let missing_service = |w: &mut World, sel: &str| w.push_log("warn", "scenario", format!("no service matches {sel}"));
+        let missing_service =
+            |w: &mut World, sel: &str| w.push_log("warn", "scenario", format!("no service matches {sel}"));
         match step.action {
             Action::Note { text } => self.push_log("info", "note", text),
             Action::CutBetweenRegions { from, to, max } => {
@@ -954,22 +937,11 @@ impl World {
                     self.set_as(a, false);
                 }
             }
-            Action::FlashCrowd {
-                service,
-                users,
-                mbps,
-                ramp,
-                secs,
-            } => match self.resolve_service(&service) {
+            Action::FlashCrowd { service, users, mbps, ramp, secs } => match self.resolve_service(&service) {
                 Some(s) => self.campaign(FlowKind::Crowd, s, users, mbps, ramp, secs),
                 None => missing_service(self, &service),
             },
-            Action::Ddos {
-                service,
-                bots,
-                mbps,
-                secs,
-            } => match self.resolve_service(&service) {
+            Action::Ddos { service, bots, mbps, secs } => match self.resolve_service(&service) {
                 Some(s) => self.campaign(FlowKind::Attack, s, bots, mbps, 2.0, secs),
                 None => missing_service(self, &service),
             },
@@ -1090,12 +1062,7 @@ impl World {
     }
 
     pub fn routers_down(&self) -> Vec<u32> {
-        self.alive
-            .iter()
-            .enumerate()
-            .filter(|(_, a)| !**a)
-            .map(|(i, _)| i as u32)
-            .collect()
+        self.alive.iter().enumerate().filter(|(_, a)| !**a).map(|(i, _)| i as u32).collect()
     }
 
     /// A stable sample of flows for the animation. Membership is decided by
@@ -1117,7 +1084,7 @@ impl World {
             }
             let stride = (n / q).max(1) as u64;
             for f in self.traffic.flows.iter().filter(|f| f.kind == kind) {
-                if mix(f.id) % stride != 0 || f.hops.is_empty() {
+                if !mix(f.id).is_multiple_of(stride) || f.hops.is_empty() {
                     continue;
                 }
                 let mut path = Vec::with_capacity(f.hops.len() + 1);
@@ -1141,11 +1108,7 @@ impl World {
             .iter()
             .map(|i| wire::IncidentView {
                 id: i.id,
-                cause: if i.causes > 1 {
-                    format!("{} (+{} more)", i.cause, i.causes - 1)
-                } else {
-                    i.cause.clone()
-                },
+                cause: if i.causes > 1 { format!("{} (+{} more)", i.cause, i.causes - 1) } else { i.cause.clone() },
                 t0: (to_secs(i.t0.saturating_sub(self.epoch)) * 1000.0).round() / 1000.0,
                 open: i.open,
                 igp_ms: i.igp_last.map(|t| to_ms(t - i.t0).round()),
@@ -1169,10 +1132,7 @@ impl World {
                     .top(10)
                     .into_iter()
                     .filter(|(_, r)| *r > 0.0)
-                    .map(|(l, r)| wire::RiskView {
-                        link: l.0,
-                        risk: (r as f64 * 1000.0).round() / 1000.0,
-                    })
+                    .map(|(l, r)| wire::RiskView { link: l.0, risk: (r as f64 * 1000.0).round() / 1000.0 })
                     .collect(),
             },
             qrouting: wire::QRoutingView {
@@ -1236,13 +1196,7 @@ impl World {
         push(src, None, 0.0, 0.0, &mut out);
         for &h in &hops {
             cum += self.links.hop_delay(h);
-            push(
-                self.links.queue_target(h),
-                Some(LinkId(h / 2)),
-                cum,
-                self.links.queue(h).queue_s,
-                &mut out,
-            );
+            push(self.links.queue_target(h), Some(LinkId(h / 2)), cum, self.links.queue(h).queue_s, &mut out);
         }
         wire::Trace {
             status: match status {

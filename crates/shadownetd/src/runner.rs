@@ -38,9 +38,7 @@ pub struct Handle {
 impl Handle {
     pub async fn command(&self, cmd: Command) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.tx
-            .send(Request::Command(cmd, tx))
-            .map_err(|_| "simulation thread is gone".to_string())?;
+        self.tx.send(Request::Command(cmd, tx)).map_err(|_| "simulation thread is gone".to_string())?;
         rx.await.map_err(|_| "simulation thread dropped the request".to_string())?
     }
 
@@ -54,8 +52,7 @@ impl Handle {
     }
 
     pub fn hello(&self) -> String {
-        serde_json::json!({ "type": "hello", "version": 1, "runId": self.run_id.load(Ordering::Relaxed) })
-            .to_string()
+        serde_json::json!({ "type": "hello", "version": 1, "runId": self.run_id.load(Ordering::Relaxed) }).to_string()
     }
 }
 
@@ -106,9 +103,7 @@ pub fn spawn(cfg: RunnerConfig, scenarios: Vec<Scenario>, sinks: Option<tokio::s
 }
 
 fn topology_json(world: &World, run_id: u32) -> Arc<str> {
-    serde_json::to_string(&TopologyView::new(&world.topo, run_id))
-        .expect("topology serialises")
-        .into()
+    serde_json::to_string(&TopologyView::new(&world.topo, run_id)).expect("topology serialises").into()
 }
 
 struct Runner {
@@ -150,7 +145,8 @@ impl Runner {
 
             let now = Instant::now();
             if !self.paused {
-                backlog_s = (backlog_s + (now - last).as_secs_f64() * self.speed).min(MAX_BACKLOG_S * self.speed.max(1.0));
+                backlog_s =
+                    (backlog_s + (now - last).as_secs_f64() * self.speed).min(MAX_BACKLOG_S * self.speed.max(1.0));
             }
             last = now;
 

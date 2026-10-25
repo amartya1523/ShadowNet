@@ -141,10 +141,10 @@ impl Traffic {
     /// replica is down we still hand out the nearest one; the flow will fail,
     /// which is the honest outcome.
     fn replica_for(&mut self, topo: &Topology, alive: &[bool], svc: ServiceId, user: RouterId) -> RouterId {
-        if let Some(&r) = self.nearest.get(&(svc.0, user.0)) {
-            if alive[r.idx()] {
-                return r;
-            }
+        if let Some(&r) = self.nearest.get(&(svc.0, user.0))
+            && alive[r.idx()]
+        {
+            return r;
         }
         let u = topo.router(user);
         let dist = |r: RouterId| {
@@ -243,8 +243,7 @@ impl Traffic {
                 (true, since) => since,
             };
         }
-        self.flows
-            .retain(|f| f.ends_at > now && f.dead_since.is_none_or(|t| now - t < GIVE_UP));
+        self.flows.retain(|f| f.ends_at > now && f.dead_since.is_none_or(|t| now - t < GIVE_UP));
 
         let rate = self.cfg.concurrent as f64 / self.cfg.mean_duration_s;
         // The arrival *count* per step is deterministic (fractional part
@@ -263,11 +262,7 @@ impl Traffic {
             if now < c.start || now >= c.end || c.spawned >= c.count {
                 continue;
             }
-            let frac = if c.ramp == 0 {
-                1.0
-            } else {
-                ((now - c.start) as f64 / c.ramp as f64).min(1.0)
-            };
+            let frac = if c.ramp == 0 { 1.0 } else { ((now - c.start) as f64 / c.ramp as f64).min(1.0) };
             let target = (c.count as f64 * frac).round() as usize;
             if target > c.spawned {
                 spawn.push((c.kind, c.service, target - c.spawned, c.rate_bps, c.end));

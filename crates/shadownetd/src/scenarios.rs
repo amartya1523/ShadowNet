@@ -24,10 +24,7 @@ pub fn parse(name: &str, text: &str) -> Result<Scenario> {
 }
 
 pub fn load(dir: Option<&Path>) -> Result<Vec<Scenario>> {
-    let mut out: Vec<Scenario> = BUILTIN
-        .iter()
-        .map(|(name, text)| parse(name, text))
-        .collect::<Result<_>>()?;
+    let mut out: Vec<Scenario> = BUILTIN.iter().map(|(name, text)| parse(name, text)).collect::<Result<_>>()?;
     if let Some(dir) = dir {
         for entry in std::fs::read_dir(dir).with_context(|| format!("reading {}", dir.display()))? {
             let path = entry?.path();

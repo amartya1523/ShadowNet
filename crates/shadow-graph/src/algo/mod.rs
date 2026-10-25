@@ -65,12 +65,7 @@ impl Csr {
     }
 
     pub fn undirected(n: usize, edges: impl IntoIterator<Item = (usize, usize, u64, u32)>) -> Self {
-        Self::from_arcs(
-            n,
-            edges
-                .into_iter()
-                .flat_map(|(u, v, w, e)| [(u, v, w, e), (v, u, w, e)]),
-        )
+        Self::from_arcs(n, edges.into_iter().flat_map(|(u, v, w, e)| [(u, v, w, e), (v, u, w, e)]))
     }
 
     pub fn arc_count(&self) -> usize {

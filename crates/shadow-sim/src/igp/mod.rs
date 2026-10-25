@@ -64,11 +64,7 @@ impl Layout {
                 for (i, e) in exits.iter().enumerate() {
                     exit_slot[e.idx()] = i as u16;
                 }
-                AsLayout {
-                    routers: a.routers.clone(),
-                    exits,
-                    exit_slot,
-                }
+                AsLayout { routers: a.routers.clone(), exits, exit_slot }
             })
             .collect();
         Layout { local, per_as }
@@ -100,11 +96,7 @@ impl View<'_> {
     /// Links of `r` that `r` currently believes are up, split into internal
     /// adjacencies and exits.
     pub fn live_links(&self, r: RouterId) -> impl Iterator<Item = (LinkId, RouterId)> + '_ {
-        self.topo
-            .neighbors(r)
-            .iter()
-            .copied()
-            .filter(move |&(l, _)| self.links.seen_up_from(l, r))
+        self.topo.neighbors(r).iter().copied().filter(move |&(l, _)| self.links.seen_up_from(l, r))
     }
 }
 

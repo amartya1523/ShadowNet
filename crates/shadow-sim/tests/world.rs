@@ -17,7 +17,11 @@ fn broken(w: &World) -> usize {
 }
 
 /// Internal graph of one AS with local indices, for reference answers.
-fn as_graph(topo: &Topology, asys: usize, weight: impl Fn(&shadow_graph::Link) -> u64) -> (Csr, HashMap<RouterId, usize>) {
+fn as_graph(
+    topo: &Topology,
+    asys: usize,
+    weight: impl Fn(&shadow_graph::Link) -> u64,
+) -> (Csr, HashMap<RouterId, usize>) {
     let a = &topo.ases[asys];
     let idx: HashMap<RouterId, usize> = a.routers.iter().enumerate().map(|(i, &r)| (r, i)).collect();
     let edges = topo
@@ -170,11 +174,7 @@ fn q_routing_forwards_without_loops() {
 fn same_seed_same_numbers() {
     let run = || {
         let mut w = world(8);
-        w.apply(Command::ChaosMonkey {
-            enabled: true,
-            per_minute: Some(30.0),
-        })
-        .unwrap();
+        w.apply(Command::ChaosMonkey { enabled: true, per_minute: Some(30.0) }).unwrap();
         w.advance(20 * SEC);
         let s = w.stats();
         (s.links_down, (s.delivered_gbps * 1e6).round() as i64, w.events_processed())
@@ -187,14 +187,7 @@ fn flash_crowd_shows_up_as_load() {
     let mut w = world(9);
     w.advance(2 * SEC);
     let before = w.stats().offered_gbps;
-    w.apply(Command::FlashCrowd {
-        service: 0,
-        users: 2000,
-        mbps: 8.0,
-        ramp_secs: 1.0,
-        secs: 20.0,
-    })
-    .unwrap();
+    w.apply(Command::FlashCrowd { service: 0, users: 2000, mbps: 8.0, ramp_secs: 1.0, secs: 20.0 }).unwrap();
     w.advance(3 * SEC);
     let s = w.stats();
     assert_eq!(s.flows.crowd, 2000);

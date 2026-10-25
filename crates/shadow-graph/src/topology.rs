@@ -38,7 +38,7 @@ pub struct TopologyConfig {
 impl Default for TopologyConfig {
     fn default() -> Self {
         TopologyConfig {
-            seed: 0x5ead_0e7,
+            seed: 0x05ea_d0e7,
             nodes: 100_000,
             tier1: 6,
             tier2: 36,
@@ -241,11 +241,7 @@ impl Topology {
     }
 
     pub fn relationship(&self, from: AsId, to: AsId) -> Option<Relationship> {
-        self.ases[from.idx()]
-            .neighbors
-            .iter()
-            .find(|(n, _)| *n == to)
-            .map(|&(_, rel)| rel)
+        self.ases[from.idx()].neighbors.iter().find(|(n, _)| *n == to).map(|&(_, rel)| rel)
     }
 
     pub fn city_of(&self, r: RouterId) -> &'static City {
@@ -256,12 +252,7 @@ impl Topology {
     /// boundaries and policy. Good for "what would a naive shortest path
     /// do" comparisons and for betweenness.
     pub fn router_graph(&self) -> Csr {
-        Csr::undirected(
-            self.routers.len(),
-            self.links
-                .iter()
-                .map(|l| (l.a.idx(), l.b.idx(), l.cost as u64, l.id.0)),
-        )
+        Csr::undirected(self.routers.len(), self.links.iter().map(|l| (l.a.idx(), l.b.idx(), l.cost as u64, l.id.0)))
     }
 
     pub fn summary(&self) -> TopologySummary {
@@ -311,11 +302,48 @@ pub struct TopologySummary {
 const GBPS: f64 = 1e9;
 
 const NAME_HEADS: &[&str] = &[
-    "Arcturus", "Meridian", "Halcyon", "Borealis", "Cobalt", "Vantage", "Lumen", "Strata",
-    "Northwind", "Kestrel", "Obsidian", "Tidewater", "Saffron", "Granite", "Helix", "Juniper",
-    "Larkspur", "Monsoon", "Nimbus", "Orchid", "Pioneer", "Quarry", "Redwood", "Sable", "Tundra",
-    "Umber", "Verdant", "Willow", "Zephyr", "Aster", "Basalt", "Cinder", "Delta", "Ember",
-    "Fjord", "Glacier", "Harbor", "Ironwood", "Jasper", "Kelvin", "Lattice", "Mosaic",
+    "Arcturus",
+    "Meridian",
+    "Halcyon",
+    "Borealis",
+    "Cobalt",
+    "Vantage",
+    "Lumen",
+    "Strata",
+    "Northwind",
+    "Kestrel",
+    "Obsidian",
+    "Tidewater",
+    "Saffron",
+    "Granite",
+    "Helix",
+    "Juniper",
+    "Larkspur",
+    "Monsoon",
+    "Nimbus",
+    "Orchid",
+    "Pioneer",
+    "Quarry",
+    "Redwood",
+    "Sable",
+    "Tundra",
+    "Umber",
+    "Verdant",
+    "Willow",
+    "Zephyr",
+    "Aster",
+    "Basalt",
+    "Cinder",
+    "Delta",
+    "Ember",
+    "Fjord",
+    "Glacier",
+    "Harbor",
+    "Ironwood",
+    "Jasper",
+    "Kelvin",
+    "Lattice",
+    "Mosaic",
 ];
 const T1_TAILS: &[&str] = &["Global Backbone", "Transit", "Global Crossing", "Worldwide"];
 const T2_TAILS: &[&str] = &["Telecom", "Networks", "Fibre", "Carrier", "Communications"];
@@ -323,9 +351,26 @@ const STUB_TAILS: &[&str] = &["Broadband", "Online", "Net", "Cable", "Wireless",
 const HOST_TAILS: &[&str] = &["Cloud", "Datacenters", "Hosting", "Compute"];
 
 const SERVICE_NAMES: &[&str] = &[
-    "vidstream", "photon-social", "quicksearch", "cloudmail", "gamehub", "newswire",
-    "musicbox", "shopfront", "mapline", "codeforge", "chatline", "drivebox", "wikiverse",
-    "ridealong", "payrail", "learnly", "podcasty", "fitlog", "tixly", "stocksnap",
+    "vidstream",
+    "photon-social",
+    "quicksearch",
+    "cloudmail",
+    "gamehub",
+    "newswire",
+    "musicbox",
+    "shopfront",
+    "mapline",
+    "codeforge",
+    "chatline",
+    "drivebox",
+    "wikiverse",
+    "ridealong",
+    "payrail",
+    "learnly",
+    "podcasty",
+    "fitlog",
+    "tixly",
+    "stocksnap",
 ];
 
 struct Builder {
@@ -363,9 +408,7 @@ impl Builder {
         let mut rng = self.rng.fork(1);
         let t1: Vec<AsId> = (0..self.cfg.tier1).map(|_| self.tier1(&mut rng)).collect();
         let t2: Vec<AsId> = (0..self.cfg.tier2).map(|_| self.tier2(&mut rng)).collect();
-        let stubs: Vec<AsId> = (0..self.cfg.stubs)
-            .map(|i| self.stub(&mut rng, i < self.cfg.hosting))
-            .collect();
+        let stubs: Vec<AsId> = (0..self.cfg.stubs).map(|i| self.stub(&mut rng, i < self.cfg.hosting)).collect();
 
         let mut rng = self.rng.fork(2);
         self.peer_tier1s(&t1);
@@ -463,16 +506,7 @@ impl Builder {
             .count();
         // Reverse-DNS style, the way they show up in a traceroute.
         let name = format!("{}-{tag}{}.as{}", c.code, n + 1, self.ases[asys.idx()].asn);
-        self.routers.push(Router {
-            id,
-            asys,
-            city,
-            role,
-            name,
-            lat,
-            lon,
-            hosts: 0..0,
-        });
+        self.routers.push(Router { id, asys, city, role, name, lat, lon, hosts: 0..0 });
         self.adjacency.push(Vec::new());
         self.ases[asys.idx()].routers.push(id);
         id
@@ -492,17 +526,7 @@ impl Builder {
         let cost = ((delay_s * 1e4).round() as u32).max(1);
         let fragility = self.rng.lognormal(1.0, 0.55);
         let id = LinkId::from_idx(self.links.len());
-        self.links.push(Link {
-            id,
-            a,
-            b,
-            kind,
-            capacity_bps,
-            delay_s,
-            km,
-            cost,
-            fragility,
-        });
+        self.links.push(Link { id, a, b, kind, capacity_bps, delay_s, km, cost, fragility });
         self.adjacency[a.idx()].push((id, b));
         self.adjacency[b.idx()].push((id, a));
         Some(id)
@@ -530,22 +554,16 @@ impl Builder {
         let mut edges: Vec<(usize, usize)> = Vec::new();
         // Prim, O(n^2), n is at most a few dozen.
         let mut in_tree = vec![false; n];
-        let mut best = vec![(f64::INFINITY, 0usize); n];
+        let mut best: Vec<(f64, usize)> = (0..n).map(|j| (d(0, j), 0)).collect();
         in_tree[0] = true;
-        for j in 1..n {
-            best[j] = (d(0, j), 0);
-        }
         for _ in 1..n {
-            let (j, _) = (0..n)
-                .filter(|&j| !in_tree[j])
-                .map(|j| (j, best[j].0))
-                .min_by(|a, b| a.1.total_cmp(&b.1))
-                .unwrap();
+            let (j, _) =
+                (0..n).filter(|&j| !in_tree[j]).map(|j| (j, best[j].0)).min_by(|a, b| a.1.total_cmp(&b.1)).unwrap();
             in_tree[j] = true;
             edges.push((best[j].1, j));
-            for k in 0..n {
-                if !in_tree[k] && d(j, k) < best[k].0 {
-                    best[k] = (d(j, k), j);
+            for (k, b) in best.iter_mut().enumerate() {
+                if !in_tree[k] && d(j, k) < b.0 {
+                    *b = (d(j, k), j);
                 }
             }
         }
@@ -701,12 +719,8 @@ impl Builder {
             let n_border = if rng.chance(0.6) { 2 } else { 1 };
             (n_border, 2 + rng.below(3), RouterRole::Access, 10.0 * GBPS)
         };
-        let borders: Vec<_> = (0..n_border)
-            .map(|_| self.new_router(rng, id, home, RouterRole::Border))
-            .collect();
-        let edges: Vec<_> = (0..n_edge)
-            .map(|_| self.new_router(rng, id, home, edge_role))
-            .collect();
+        let borders: Vec<_> = (0..n_border).map(|_| self.new_router(rng, id, home, RouterRole::Border)).collect();
+        let edges: Vec<_> = (0..n_edge).map(|_| self.new_router(rng, id, home, edge_role)).collect();
         if n_border == 2 {
             self.connect(borders[0], borders[1], LinkKind::Internal, cap);
         }
@@ -728,20 +742,11 @@ impl Builder {
     // -- interconnection ----------------------------------------------------
 
     fn routers_in(&self, a: AsId, city: CityId) -> Vec<RouterId> {
-        self.ases[a.idx()]
-            .routers
-            .iter()
-            .copied()
-            .filter(|r| self.routers[r.idx()].city == city)
-            .collect()
+        self.ases[a.idx()].routers.iter().copied().filter(|r| self.routers[r.idx()].city == city).collect()
     }
 
     fn pops_of(&self, a: AsId) -> Vec<CityId> {
-        let mut v: Vec<CityId> = self.ases[a.idx()]
-            .routers
-            .iter()
-            .map(|r| self.routers[r.idx()].city)
-            .collect();
+        let mut v: Vec<CityId> = self.ases[a.idx()].routers.iter().map(|r| self.routers[r.idx()].city).collect();
         v.sort_unstable();
         v.dedup();
         v
@@ -774,10 +779,7 @@ impl Builder {
     }
 
     fn distance_to_as(&self, from: CityId, to: AsId) -> f64 {
-        self.pops_of(to)
-            .into_iter()
-            .map(|c| geo::city_distance_km(from, c))
-            .fold(f64::INFINITY, f64::min)
+        self.pops_of(to).into_iter().map(|c| geo::city_distance_km(from, c)).fold(f64::INFINITY, f64::min)
     }
 
     fn peer_tier1s(&mut self, t1: &[AsId]) {
@@ -811,10 +813,8 @@ impl Builder {
         while out.len() < k && !pool.is_empty() {
             // Closer upstreams are much more likely, but not certain: plenty
             // of networks buy transit from someone a continent away.
-            let w = WeightedIndex::new(
-                pool.iter()
-                    .map(|&p| 1.0 / (1.0 + self.distance_to_as(home, p) / 800.0).powi(2)),
-            );
+            let w =
+                WeightedIndex::new(pool.iter().map(|&p| 1.0 / (1.0 + self.distance_to_as(home, p) / 800.0).powi(2)));
             out.push(pool.swap_remove(w.sample(rng)));
         }
         out
@@ -860,11 +860,7 @@ impl Builder {
             .filter(|r| self.routers[r.idx()].role == RouterRole::Border)
             .collect();
 
-        let regional: Vec<AsId> = t2
-            .iter()
-            .copied()
-            .filter(|&p| self.ases[p.idx()].region == region)
-            .collect();
+        let regional: Vec<AsId> = t2.iter().copied().filter(|&p| self.ases[p.idx()].region == region).collect();
         let regional = if regional.is_empty() { t2.to_vec() } else { regional };
 
         let mut upstreams = Vec::new();
@@ -905,12 +901,8 @@ impl Builder {
     // -- services and hosts ---------------------------------------------------
 
     fn place_services(&mut self, rng: &mut Rng) {
-        let dcs: Vec<RouterId> = self
-            .routers
-            .iter()
-            .filter(|r| r.role == RouterRole::Datacenter)
-            .map(|r| r.id)
-            .collect();
+        let dcs: Vec<RouterId> =
+            self.routers.iter().filter(|r| r.role == RouterRole::Datacenter).map(|r| r.id).collect();
         if dcs.is_empty() {
             return;
         }
@@ -933,15 +925,8 @@ impl Builder {
             let mut as_list: Vec<AsId> = by_as.keys().copied().collect();
             as_list.sort_unstable();
             rng.shuffle(&mut as_list);
-            let replicas: Vec<RouterId> = as_list
-                .iter()
-                .take(n_replicas)
-                .map(|a| *rng.pick(&by_as[a]))
-                .collect();
-            let name = SERVICE_NAMES
-                .get(rank)
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| format!("service-{rank}"));
+            let replicas: Vec<RouterId> = as_list.iter().take(n_replicas).map(|a| *rng.pick(&by_as[a])).collect();
+            let name = SERVICE_NAMES.get(rank).map(|s| s.to_string()).unwrap_or_else(|| format!("service-{rank}"));
             self.services.push(Service {
                 id: ServiceId::from_idx(rank),
                 name,
@@ -952,12 +937,8 @@ impl Builder {
     }
 
     fn place_hosts(&mut self, rng: &mut Rng) -> (Vec<RouterId>, Vec<f32>, Range<u32>) {
-        let access: Vec<RouterId> = self
-            .routers
-            .iter()
-            .filter(|r| r.role == RouterRole::Access)
-            .map(|r| r.id)
-            .collect();
+        let access: Vec<RouterId> =
+            self.routers.iter().filter(|r| r.role == RouterRole::Access).map(|r| r.id).collect();
         let mut dc_replicas: Vec<RouterId> = self.services.iter().flat_map(|s| s.replicas.clone()).collect();
         dc_replicas.sort_unstable();
         dc_replicas.dedup();
@@ -972,10 +953,7 @@ impl Builder {
         // Uneven population per access router, like real metros.
         let weights: Vec<f64> = access.iter().map(|_| rng.lognormal(1.0, 0.6)).collect();
         let wsum: f64 = weights.iter().sum();
-        let mut counts: Vec<usize> = weights
-            .iter()
-            .map(|w| (w / wsum * budget as f64).floor() as usize)
-            .collect();
+        let mut counts: Vec<usize> = weights.iter().map(|w| (w / wsum * budget as f64).floor() as usize).collect();
         // Hand out the rounding remainder so the total is exact.
         let mut short = budget - counts.iter().sum::<usize>();
         let (mut i, n_access) = (0, counts.len());
@@ -1069,9 +1047,11 @@ mod tests {
         let t = Topology::generate(&TopologyConfig::small(4));
         for asys in &t.ases {
             let ids: HashMap<RouterId, usize> = asys.routers.iter().enumerate().map(|(i, &r)| (r, i)).collect();
-            let edges = t.links.iter().filter(|l| l.kind == LinkKind::Internal).filter_map(|l| {
-                Some((*ids.get(&l.a)?, *ids.get(&l.b)?, l.cost as u64, l.id.0))
-            });
+            let edges = t
+                .links
+                .iter()
+                .filter(|l| l.kind == LinkKind::Internal)
+                .filter_map(|l| Some((*ids.get(&l.a)?, *ids.get(&l.b)?, l.cost as u64, l.id.0)));
             let g = Csr::undirected(ids.len(), edges);
             let sp = dijkstra(&g, 0);
             assert!((0..ids.len()).all(|v| sp.reachable(v)), "{}", asys.name);
@@ -1093,11 +1073,7 @@ mod tests {
     fn every_non_tier1_has_a_provider() {
         let t = Topology::generate(&TopologyConfig::small(6));
         for a in t.ases.iter().filter(|a| a.tier != Tier::Tier1) {
-            assert!(
-                a.neighbors.iter().any(|&(_, r)| r == Relationship::Provider),
-                "{} has no upstream",
-                a.name
-            );
+            assert!(a.neighbors.iter().any(|&(_, r)| r == Relationship::Provider), "{} has no upstream", a.name);
         }
     }
 

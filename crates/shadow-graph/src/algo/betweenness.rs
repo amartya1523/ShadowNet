@@ -116,15 +116,7 @@ mod tests {
         // Two triangles joined by a bridge (edge 3).
         let g = Csr::undirected(
             6,
-            [
-                (0, 1, 1, 0),
-                (1, 2, 1, 1),
-                (2, 0, 1, 2),
-                (2, 3, 1, 3),
-                (3, 4, 1, 4),
-                (4, 5, 1, 5),
-                (5, 3, 1, 6),
-            ],
+            [(0, 1, 1, 0), (1, 2, 1, 1), (2, 0, 1, 2), (2, 3, 1, 3), (3, 4, 1, 4), (4, 5, 1, 5), (5, 3, 1, 6)],
         );
         let b = edge_betweenness(&g, 7, None);
         // 3 x 3 pairs cross the bridge, both directions.

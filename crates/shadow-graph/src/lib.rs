@@ -12,6 +12,5 @@ pub mod topology;
 pub use ids::{AsId, CityId, HostId, LinkId, RouterId, ServiceId};
 pub use rng::Rng;
 pub use topology::{
-    AutonomousSystem, Link, LinkKind, Relationship, Router, RouterRole, Service, Tier, Topology,
-    TopologyConfig,
+    AutonomousSystem, Link, LinkKind, Relationship, Router, RouterRole, Service, Tier, Topology, TopologyConfig,
 };

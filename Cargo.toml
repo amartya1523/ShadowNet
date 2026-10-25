@@ -26,3 +26,9 @@ opt-level = 2
 
 [profile.dev]
 opt-level = 1
+
+[workspace.lints.clippy]
+# Most loops in the simulator walk several parallel arrays by index; an
+# iterator chain over one of them while indexing the rest reads worse.
+needless_range_loop = "allow"
+too_many_arguments = "allow"

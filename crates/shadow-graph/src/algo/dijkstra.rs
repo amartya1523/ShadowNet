@@ -98,14 +98,7 @@ pub fn dijkstra_with<G: Graph>(g: &G, source: usize, transit: impl Fn(usize) -> 
         });
     }
 
-    ShortestPaths {
-        source,
-        dist,
-        parent,
-        parent_edge,
-        first_edge,
-        order,
-    }
+    ShortestPaths { source, dist, parent, parent_edge, first_edge, order }
 }
 
 #[cfg(test)]
@@ -121,10 +114,7 @@ mod tests {
         // 0     3 -- 4
         //  \   /
         //    2
-        Csr::undirected(
-            5,
-            [(0, 1, 1, 0), (1, 3, 5, 1), (0, 2, 2, 2), (2, 3, 1, 3), (3, 4, 1, 4)],
-        )
+        Csr::undirected(5, [(0, 1, 1, 0), (1, 3, 5, 1), (0, 2, 2, 2), (2, 3, 1, 3), (3, 4, 1, 4)])
     }
 
     #[test]

@@ -112,10 +112,7 @@ impl DistanceVector {
             return;
         }
         let my_as = v.topo.as_of(r);
-        let neighbours: Vec<(LinkId, RouterId)> = v
-            .live_links(r)
-            .filter(|&(_, n)| v.topo.as_of(n) == my_as)
-            .collect();
+        let neighbours: Vec<(LinkId, RouterId)> = v.live_links(r).filter(|&(_, n)| v.topo.as_of(n) == my_as).collect();
         for (l, n) in neighbours {
             let vector = self.vector_for(r, l);
             let delay = crate::time::from_secs(v.links.propagation(l)) + MS;
@@ -166,12 +163,8 @@ impl DistanceVector {
         if !v.alive[r.idx()] {
             return;
         }
-        let row: Vec<usize> = self.fib.next[r.idx()]
-            .iter()
-            .enumerate()
-            .filter(|&(_, &via)| via == l.0)
-            .map(|(t, _)| t)
-            .collect();
+        let row: Vec<usize> =
+            self.fib.next[r.idx()].iter().enumerate().filter(|&(_, &via)| via == l.0).map(|(t, _)| t).collect();
         for t in row {
             self.set(r, t, INFINITY, NONE);
         }

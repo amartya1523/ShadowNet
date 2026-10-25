@@ -56,7 +56,8 @@ fn json_blob(body: impl Into<String>) -> Response {
 }
 
 fn unavailable() -> Response {
-    (StatusCode::SERVICE_UNAVAILABLE, Json(json!({ "ok": false, "error": "simulation thread is gone" }))).into_response()
+    (StatusCode::SERVICE_UNAVAILABLE, Json(json!({ "ok": false, "error": "simulation thread is gone" })))
+        .into_response()
 }
 
 async fn health(State(h): State<Handle>) -> Json<Value> {

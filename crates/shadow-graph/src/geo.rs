@@ -17,14 +17,8 @@ pub enum Region {
 }
 
 impl Region {
-    pub const ALL: [Region; 6] = [
-        Region::NorthAmerica,
-        Region::SouthAmerica,
-        Region::Europe,
-        Region::Africa,
-        Region::Asia,
-        Region::Oceania,
-    ];
+    pub const ALL: [Region; 6] =
+        [Region::NorthAmerica, Region::SouthAmerica, Region::Europe, Region::Africa, Region::Asia, Region::Oceania];
 
     pub fn code(self) -> &'static str {
         match self {
@@ -65,14 +59,7 @@ pub struct City {
 
 macro_rules! city {
     ($code:literal, $name:literal, $lat:expr, $lon:expr, $region:ident, $hub:expr) => {
-        City {
-            code: $code,
-            name: $name,
-            lat: $lat,
-            lon: $lon,
-            region: Region::$region,
-            hub: $hub,
-        }
+        City { code: $code, name: $name, lat: $lat, lon: $lon, region: Region::$region, hub: $hub }
     };
 }
 
@@ -145,11 +132,7 @@ pub fn city(id: CityId) -> &'static City {
 }
 
 pub fn cities_in(region: Region) -> impl Iterator<Item = CityId> {
-    CITIES
-        .iter()
-        .enumerate()
-        .filter(move |(_, c)| c.region == region)
-        .map(|(i, _)| CityId::from_idx(i))
+    CITIES.iter().enumerate().filter(move |(_, c)| c.region == region).map(|(i, _)| CityId::from_idx(i))
 }
 
 const EARTH_RADIUS_KM: f64 = 6371.0;

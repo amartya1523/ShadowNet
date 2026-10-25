@@ -33,11 +33,7 @@ impl std::fmt::Display for NegativeCycle {
 impl std::error::Error for NegativeCycle {}
 
 /// `arcs` are directed `(from, to, weight)`.
-pub fn bellman_ford(
-    n: usize,
-    arcs: &[(usize, usize, i64)],
-    source: usize,
-) -> Result<BellmanFord, NegativeCycle> {
+pub fn bellman_ford(n: usize, arcs: &[(usize, usize, i64)], source: usize) -> Result<BellmanFord, NegativeCycle> {
     let mut dist: Vec<Option<i64>> = vec![None; n];
     let mut parent = vec![NONE; n];
     dist[source] = Some(0);
@@ -79,12 +75,7 @@ pub fn bellman_ford(
         return Err(NegativeCycle { cycle });
     }
 
-    Ok(BellmanFord {
-        source,
-        dist,
-        parent,
-        rounds,
-    })
+    Ok(BellmanFord { source, dist, parent, rounds })
 }
 
 #[cfg(test)]

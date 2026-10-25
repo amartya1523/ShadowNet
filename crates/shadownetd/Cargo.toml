@@ -22,3 +22,6 @@ toml = "1.1.8"
 tower-http = { version = "0.7.1", features = ["fs", "cors", "compression-gzip"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+
+[lints]
+workspace = true

@@ -41,15 +41,15 @@ pub async fn start(cfg: SinkConfig) -> Result<Option<mpsc::Sender<Sample>>> {
     tokio::spawn(async move {
         let (mut timescale, mut redis) = (timescale, redis);
         while let Some(s) = rx.recv().await {
-            if let Some(ts) = &mut timescale {
-                if let Err(e) = ts.write(&s).await {
-                    warn!("timescale write failed: {e:#}");
-                }
+            if let Some(ts) = &mut timescale
+                && let Err(e) = ts.write(&s).await
+            {
+                warn!("timescale write failed: {e:#}");
             }
-            if let Some(r) = &mut redis {
-                if let Err(e) = r.write(&s).await {
-                    warn!("redis write failed: {e:#}");
-                }
+            if let Some(r) = &mut redis
+                && let Err(e) = r.write(&s).await
+            {
+                warn!("redis write failed: {e:#}");
             }
         }
     });
@@ -102,9 +102,8 @@ CREATE INDEX IF NOT EXISTS link_stats_link_time ON link_stats (link_id, time DES
 
 impl Timescale {
     async fn connect(url: &str) -> Result<Self> {
-        let (client, conn) = tokio_postgres::connect(url, tokio_postgres::NoTls)
-            .await
-            .with_context(|| "connecting to TimescaleDB")?;
+        let (client, conn) =
+            tokio_postgres::connect(url, tokio_postgres::NoTls).await.with_context(|| "connecting to TimescaleDB")?;
         tokio::spawn(async move {
             if let Err(e) = conn.await {
                 warn!("timescale connection closed: {e}");
@@ -118,7 +117,9 @@ impl Timescale {
                 for t in ["net_stats", "link_stats"] {
                     client
                         .execute(
-                            &format!("SELECT create_hypertable('{t}', 'time', if_not_exists => TRUE, migrate_data => TRUE)"),
+                            &format!(
+                                "SELECT create_hypertable('{t}', 'time', if_not_exists => TRUE, migrate_data => TRUE)"
+                            ),
                             &[],
                         )
                         .await
@@ -126,7 +127,10 @@ impl Timescale {
                 }
                 info!("timescale sink ready (hypertables)");
             }
-            Err(e) => info!("timescale extension unavailable ({e}); using plain tables"),
+            Err(e) => {
+                let why = e.as_db_error().map_or_else(|| e.to_string(), |d| d.message().to_string());
+                info!("timescaledb extension unavailable ({why}); using plain tables");
+            }
         }
         Ok(Timescale { client })
     }
@@ -191,10 +195,7 @@ struct Redis {
 impl Redis {
     async fn connect(url: &str) -> Result<Self> {
         let client = redis::Client::open(url).context("parsing redis url")?;
-        let conn = client
-            .get_multiplexed_async_connection()
-            .await
-            .context("connecting to redis")?;
+        let conn = client.get_multiplexed_async_connection().await.context("connecting to redis")?;
         info!("redis sink ready");
         Ok(Redis { conn })
     }

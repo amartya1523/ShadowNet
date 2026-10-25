@@ -128,11 +128,7 @@ fn main() -> Result<()> {
             Ok(())
         }
         Cmd::Topology { seed, nodes } => {
-            let topo = shadow_graph::Topology::generate(&TopologyConfig {
-                seed,
-                nodes,
-                ..TopologyConfig::default()
-            });
+            let topo = shadow_graph::Topology::generate(&TopologyConfig { seed, nodes, ..TopologyConfig::default() });
             println!("{}", serde_json::to_string_pretty(&TopologyView::new(&topo, 1))?);
             Ok(())
         }
@@ -150,24 +146,15 @@ fn serve(args: ServeArgs) -> Result<()> {
         sim.routing = r.into();
     }
     let scenarios = scenarios::load(args.scenarios.as_deref())?;
-    let static_dir = args
-        .static_dir
-        .or_else(|| Some(PathBuf::from("dashboard/out")).filter(|p| p.join("index.html").exists()));
+    let static_dir =
+        args.static_dir.or_else(|| Some(PathBuf::from("dashboard/out")).filter(|p| p.join("index.html").exists()));
     let addr = args.addr.unwrap_or_else(|| "127.0.0.1:7070".parse().unwrap());
 
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     rt.block_on(async move {
-        let sinks = sinks::start(sinks::SinkConfig {
-            timescale_url: args.timescale,
-            redis_url: args.redis,
-        })
-        .await?;
+        let sinks = sinks::start(sinks::SinkConfig { timescale_url: args.timescale, redis_url: args.redis }).await?;
         let handle = runner::spawn(
-            runner::RunnerConfig {
-                sim,
-                speed: args.speed,
-                frame_interval: Duration::from_millis(200),
-            },
+            runner::RunnerConfig { sim, speed: args.speed, frame_interval: Duration::from_millis(200) },
             scenarios,
             sinks,
         );
@@ -176,9 +163,7 @@ fn serve(args: ServeArgs) -> Result<()> {
             None => info!("no dashboard build found; API only"),
         }
         let app = api::router(handle, static_dir);
-        let listener = tokio::net::TcpListener::bind(addr)
-            .await
-            .with_context(|| format!("binding {addr}"))?;
+        let listener = tokio::net::TcpListener::bind(addr).await.with_context(|| format!("binding {addr}"))?;
         info!("listening on http://{addr}");
         axum::serve(listener, app)
             .with_graceful_shutdown(async {

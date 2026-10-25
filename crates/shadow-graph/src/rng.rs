@@ -23,12 +23,7 @@ fn splitmix64(state: &mut u64) -> u64 {
 impl Rng {
     pub fn new(seed: u64) -> Self {
         let mut sm = seed;
-        let s = [
-            splitmix64(&mut sm),
-            splitmix64(&mut sm),
-            splitmix64(&mut sm),
-            splitmix64(&mut sm),
-        ];
+        let s = [splitmix64(&mut sm), splitmix64(&mut sm), splitmix64(&mut sm), splitmix64(&mut sm)];
         Rng { s }
     }
 

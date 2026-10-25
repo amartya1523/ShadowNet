@@ -97,11 +97,8 @@ impl Bgp {
                 for (i, &(b, _)) in neighbors.iter().enumerate() {
                     slot[a.id.idx()][b.idx()] = i as u16;
                     // Updates travel over the shortest interconnect.
-                    let prop = topo
-                        .links_between(a.id, b)
-                        .iter()
-                        .map(|&l| topo.link(l).delay_s)
-                        .fold(f64::INFINITY, f64::min);
+                    let prop =
+                        topo.links_between(a.id, b).iter().map(|&l| topo.link(l).delay_s).fold(f64::INFINITY, f64::min);
                     d.push(processing + from_secs(prop));
                 }
                 delay.push(d);
@@ -146,10 +143,7 @@ impl Bgp {
     /// Originate our own prefix. Called once per AS at boot.
     pub fn originate(&mut self, a: AsId, mrai: Nanos, q: &mut EventQueue) {
         let s = &mut self.speakers[a.idx()];
-        s.best[a.idx()] = Some(Best {
-            from: None,
-            path: Arc::from([]),
-        });
+        s.best[a.idx()] = Some(Best { from: None, path: Arc::from([]) });
         self.changed = true;
         self.mark_all_neighbors(a, a);
         self.flush_all(a, mrai, q);
@@ -245,10 +239,8 @@ impl Bgp {
                 winner = Some(key);
             }
         }
-        let new = winner.map(|(_, _, _, i)| Best {
-            from: Some(i as u16),
-            path: s.rib_in[i][prefix.idx()].clone().unwrap(),
-        });
+        let new =
+            winner.map(|(_, _, _, i)| Best { from: Some(i as u16), path: s.rib_in[i][prefix.idx()].clone().unwrap() });
         let old = &s.best[prefix.idx()];
         let same = match (old, &new) {
             (None, None) => true,
@@ -334,15 +326,7 @@ impl Bgp {
         let epoch = s.epoch[i];
         s.mrai_armed[i] = true;
         self.updates_sent += 1;
-        q.after(
-            self.delay[a.idx()][i],
-            Event::Bgp {
-                to,
-                from: a,
-                epoch,
-                update: Arc::new(update),
-            },
-        );
+        q.after(self.delay[a.idx()][i], Event::Bgp { to, from: a, epoch, update: Arc::new(update) });
         q.after(mrai, Event::Mrai { asys: a, neighbor: i as u16 });
     }
 }

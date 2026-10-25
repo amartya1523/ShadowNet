@@ -24,10 +24,7 @@ fn mode_name(m: RoutingMode) -> &'static str {
 
 fn world(seed: u64, mode: RoutingMode) -> World {
     let mut w = World::new(SimConfig {
-        topology: TopologyConfig {
-            seed,
-            ..TopologyConfig::default()
-        },
+        topology: TopologyConfig { seed, ..TopologyConfig::default() },
         ..SimConfig::default()
     });
     w.apply(Command::SetRouting { mode }).unwrap();
@@ -89,10 +86,7 @@ fn scale() -> String {
             stubs: ((base.stubs as f64 * k).round() as usize).max(20),
             ..base
         };
-        let mut cfg = SimConfig {
-            topology,
-            ..SimConfig::default()
-        };
+        let mut cfg = SimConfig { topology, ..SimConfig::default() };
         cfg.traffic.concurrent = (30_000.0 * k) as usize;
         let t0 = Instant::now();
         let mut w = World::new(cfg.clone());
@@ -191,15 +185,8 @@ struct Window {
 }
 
 fn crowd_window(w: &mut World, secs: u64) -> Window {
-    let mut acc = Window {
-        delivered: 0.0,
-        loss: 0.0,
-        p99: 0.0,
-        crowd_loss: 0.0,
-        crowd_lat: 0.0,
-        bg_loss: 0.0,
-        samples: 0.0,
-    };
+    let mut acc =
+        Window { delivered: 0.0, loss: 0.0, p99: 0.0, crowd_loss: 0.0, crowd_lat: 0.0, bg_loss: 0.0, samples: 0.0 };
     for _ in 0..secs {
         w.advance(SEC);
         let s = w.stats();
@@ -239,26 +226,16 @@ fn crowd(seed: u64) -> String {
          ramping over 5 s. Averages over the 30 s after the ramp. Same seed, same users, same \
          topology; only the forwarding differs.\n\n",
     );
-    out.push_str("| routing | delivered | network loss | p99 latency | crowd loss | crowd mean latency | background loss |\n");
+    out.push_str(
+        "| routing | delivered | network loss | p99 latency | crowd loss | crowd mean latency | background loss |\n",
+    );
     out.push_str("|---|---:|---:|---:|---:|---:|---:|\n");
     for mode in MODES {
         eprintln!("crowd: {}", mode_name(mode));
         let mut w = world(seed, mode);
         w.advance(5 * SEC);
-        let svc = w
-            .topo
-            .services
-            .iter()
-            .position(|s| s.replicas.len() == 1)
-            .expect("no single-replica service") as u16;
-        w.apply(Command::FlashCrowd {
-            service: svc,
-            users: 10_000,
-            mbps: 8.0,
-            ramp_secs: 5.0,
-            secs: 60.0,
-        })
-        .unwrap();
+        let svc = w.topo.services.iter().position(|s| s.replicas.len() == 1).expect("no single-replica service") as u16;
+        w.apply(Command::FlashCrowd { service: svc, users: 10_000, mbps: 8.0, ramp_secs: 5.0, secs: 60.0 }).unwrap();
         w.advance(10 * SEC);
         let a = crowd_window(&mut w, 30);
         let n = a.samples;
@@ -305,15 +282,8 @@ fn brownout(seed: u64) -> String {
             mean += s.latency_ms.mean;
             p99 += s.latency_ms.p99;
         }
-        writeln!(
-            out,
-            "| {} | {:.1} ms | {:.1} ms | {:.0} ms |",
-            mode_name(mode),
-            before,
-            mean / 30.0,
-            p99 / 30.0
-        )
-        .unwrap();
+        writeln!(out, "| {} | {:.1} ms | {:.1} ms | {:.0} ms |", mode_name(mode), before, mean / 30.0, p99 / 30.0)
+            .unwrap();
     }
     out.push('\n');
     out
@@ -327,33 +297,16 @@ fn predictor(seed: u64) -> String {
          labelled link-seconds; every score was made before its label existed.\n\n",
     );
     let mut w = world(seed, RoutingMode::Ospf);
-    w.apply(Command::ChaosMonkey {
-        enabled: true,
-        per_minute: Some(40.0),
-    })
-    .unwrap();
+    w.apply(Command::ChaosMonkey { enabled: true, per_minute: Some(40.0) }).unwrap();
     let single = w.topo.services.iter().position(|s| s.replicas.len() == 1).unwrap_or(0) as u16;
     let mut rows = Vec::new();
     for minute in 1..=15 {
         eprintln!("predictor: minute {minute}");
         match minute {
             3 | 9 => w
-                .apply(Command::FlashCrowd {
-                    service: single,
-                    users: 10_000,
-                    mbps: 8.0,
-                    ramp_secs: 5.0,
-                    secs: 90.0,
-                })
+                .apply(Command::FlashCrowd { service: single, users: 10_000, mbps: 8.0, ramp_secs: 5.0, secs: 90.0 })
                 .unwrap(),
-            6 | 12 => w
-                .apply(Command::Ddos {
-                    service: 0,
-                    bots: 4000,
-                    mbps: 25.0,
-                    secs: 60.0,
-                })
-                .unwrap(),
+            6 | 12 => w.apply(Command::Ddos { service: 0, bots: 4000, mbps: 25.0, secs: 60.0 }).unwrap(),
             _ => {}
         }
         w.advance(60 * SEC);
