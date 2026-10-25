@@ -1,0 +1,45 @@
+name = "router-crash"
+title = "Crash the busiest core router, twice"
+description = """
+The busiest core router crashes under link-state routing and then again
+under distance-vector routing. Same failure, very different recovery: SPF
+reconverges in a few hundred milliseconds, RIP needs its periodic updates
+and counts its way towards infinity."""
+duration = 100
+routing = "ospf"
+
+[[step]]
+at = 3
+do = "note"
+text = "Round one: link-state routing."
+
+[[step]]
+at = 6
+do = "crash_busiest_router"
+
+[[step]]
+at = 30
+do = "heal_all"
+
+[[step]]
+at = 45
+do = "set_routing"
+mode = "dv"
+
+[[step]]
+at = 46
+do = "note"
+text = "Round two: same crash, distance-vector routing."
+
+[[step]]
+at = 52
+do = "crash_busiest_router"
+
+[[step]]
+at = 80
+do = "heal_all"
+
+[[step]]
+at = 95
+do = "set_routing"
+mode = "ospf"

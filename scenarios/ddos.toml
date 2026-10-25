@@ -1,0 +1,26 @@
+name = "ddos"
+title = "Botnet versus the biggest site"
+description = """
+Four thousand compromised hosts spread across every continent flood the most
+popular service at 25 Mbit/s each. Anycast-style replica selection means the
+attack lands on the replica nearest to each bot, so it is diluted, but the
+access networks the bots sit in suffer, and so does everyone in them."""
+duration = 70
+
+[[step]]
+at = 3
+do = "note"
+text = "A botnet is waking up."
+
+[[step]]
+at = 6
+do = "ddos"
+service = "@top"
+bots = 4000
+mbps = 25
+secs = 45
+
+[[step]]
+at = 55
+do = "note"
+text = "Attack over. Queues drain within a second; the damage is in the incident log."

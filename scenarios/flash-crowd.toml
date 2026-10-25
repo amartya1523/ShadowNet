@@ -1,0 +1,39 @@
+name = "flash-crowd"
+title = "Ten thousand users, one site"
+description = """
+A single-datacenter service gets ten thousand simultaneous users at 8 Mbit/s
+each. Its upstream links saturate, queues fill to the buffer limit and
+everyone sharing those links pays for it. Halfway through, forwarding
+switches from link-state routing to the Q-routing agent, which starts
+spreading the load across the datacenter's other uplinks."""
+duration = 90
+routing = "ospf"
+
+[[step]]
+at = 2
+do = "note"
+text = "Ten thousand users are about to open the same page."
+
+[[step]]
+at = 5
+do = "flash_crowd"
+service = "@single"
+users = 10000
+mbps = 8
+ramp = 6
+secs = 75
+
+[[step]]
+at = 30
+do = "note"
+text = "Hot-potato routing keeps every flow on the same exit. Handing forwarding to the RL agent."
+
+[[step]]
+at = 32
+do = "set_routing"
+mode = "qrouting"
+
+[[step]]
+at = 85
+do = "set_routing"
+mode = "ospf"

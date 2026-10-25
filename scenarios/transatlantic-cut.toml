@@ -1,0 +1,34 @@
+name = "transatlantic-cut"
+title = "Cut the Atlantic"
+description = """
+Every circuit between North America and Europe goes dark at once, the way it
+would if a ship dragged its anchor across the cable landing zones. The
+backbones reroute internally the long way round, through Asia and across the
+Pacific: nothing is unreachable for long, but transatlantic traffic pays for
+it in latency. Repaired after a minute."""
+duration = 95
+
+[[step]]
+at = 2
+do = "note"
+text = "Steady state. Note p50 latency and the NA-EU links in the middle of the map."
+
+[[step]]
+at = 8
+do = "cut_between_regions"
+from = "NA"
+to = "EU"
+
+[[step]]
+at = 9
+do = "note"
+text = "Transatlantic capacity is gone. Routers notice in 150 ms and flood the news; SPF sends everything the long way round."
+
+[[step]]
+at = 70
+do = "note"
+text = "Cable ships have done their job. Restoring."
+
+[[step]]
+at = 72
+do = "heal_all"

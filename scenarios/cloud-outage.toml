@@ -1,0 +1,27 @@
+name = "cloud-outage"
+title = "A cloud region disappears"
+description = """
+The hosting network behind the most popular service's primary datacenter
+goes down entirely. Its prefix is withdrawn across the internet, health
+checks move new users to the remaining replicas, and their uplinks take the
+extra load."""
+duration = 80
+
+[[step]]
+at = 3
+do = "note"
+text = "Everything looks fine. It usually does."
+
+[[step]]
+at = 6
+do = "fail_hosting_as"
+service = "@top"
+
+[[step]]
+at = 7
+do = "note"
+text = "Datacenter offline. BGP withdraws its prefix; GSLB sends new users elsewhere."
+
+[[step]]
+at = 55
+do = "heal_all"

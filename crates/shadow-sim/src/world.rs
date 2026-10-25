@@ -1103,13 +1103,14 @@ impl World {
     /// its whole life and its dot does not blink in and out.
     pub fn flow_sample(&self) -> Vec<wire::FlowView> {
         let count = |k: FlowKind| self.traffic.flows.iter().filter(|f| f.kind == k).count();
-        let quota = [
-            (FlowKind::Attack, FLOW_SAMPLE / 4),
-            (FlowKind::Crowd, FLOW_SAMPLE / 4),
-            (FlowKind::Background, FLOW_SAMPLE / 2),
-        ];
         let mut out = Vec::new();
-        for (kind, q) in quota {
+        // Campaign flows get a quarter each when present; background gets
+        // whatever is left, so a quiet network still looks busy.
+        for kind in [FlowKind::Attack, FlowKind::Crowd, FlowKind::Background] {
+            let q = match kind {
+                FlowKind::Background => FLOW_SAMPLE - out.len(),
+                _ => FLOW_SAMPLE / 4,
+            };
             let n = count(kind);
             if n == 0 {
                 continue;

@@ -1,0 +1,20 @@
+name = "tier1-down"
+title = "Lose a tier-1"
+description = """
+The tier-1 backbone with the most customers fails. Every network that
+depended on it as its only upstream is cut off; everyone else has to move
+to their other providers. A good look at BGP path exploration."""
+duration = 70
+
+[[step]]
+at = 3
+do = "note"
+text = "The largest transit provider is about to have a very bad day."
+
+[[step]]
+at = 6
+do = "fail_biggest_tier1"
+
+[[step]]
+at = 50
+do = "heal_all"

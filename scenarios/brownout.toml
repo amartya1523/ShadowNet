@@ -1,0 +1,36 @@
+name = "brownout"
+title = "Europe to Asia brownout"
+description = """
+Nothing fails; everything between Europe and Asia gets 120 ms slower. Routing
+protocols that only look at configured costs do not notice. The Q-routing
+agent does, because it learns from measured delay."""
+duration = 70
+routing = "ospf"
+
+[[step]]
+at = 3
+do = "latency_spike_between_regions"
+from = "EU"
+to = "AS"
+ms = 120
+secs = 55
+
+[[step]]
+at = 4
+do = "note"
+text = "EU-AS circuits are degraded but up. OSPF keeps using them."
+
+[[step]]
+at = 25
+do = "set_routing"
+mode = "qrouting"
+
+[[step]]
+at = 26
+do = "note"
+text = "Q-routing sees the measured delay and starts steering around it where it can."
+
+[[step]]
+at = 65
+do = "set_routing"
+mode = "ospf"

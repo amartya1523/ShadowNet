@@ -1,0 +1,23 @@
+name = "chaos-monkey"
+title = "Chaos monkey"
+description = """
+Links fail on their own, more often when they are hot or have been flapping.
+Leave it running for a few minutes and watch the failure predictor's AUC
+climb past the utilisation-only baseline."""
+duration = 300
+
+[[step]]
+at = 2
+do = "chaos_monkey"
+enabled = true
+per_minute = 40
+
+[[step]]
+at = 3
+do = "note"
+text = "The monkey is loose. The predictor learns from every failure, after the fact."
+
+[[step]]
+at = 290
+do = "chaos_monkey"
+enabled = false

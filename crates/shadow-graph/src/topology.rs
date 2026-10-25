@@ -611,7 +611,56 @@ impl Builder {
             groups.push((c, rs));
         }
         self.backbone(&groups, 2, 100.0 * GBPS);
+        self.ocean_crossings(&groups, 100.0 * GBPS);
         id
+    }
+
+    /// Distance-based wiring happily builds a global backbone with a single
+    /// cable across each ocean. Real carriers buy capacity on diverse
+    /// systems, and close the loop around the planet, precisely so that one
+    /// cable cut cannot split them in half. Add those crossings explicitly:
+    /// for each continent pair the carrier spans, connect the closest POP
+    /// pairs that are not already connected (two for the Atlantic).
+    fn ocean_crossings(&mut self, pops: &[(CityId, Vec<RouterId>)], cap: f64) {
+        use Region::*;
+        let routes = [
+            (NorthAmerica, Europe, 2),
+            (Europe, Asia, 2),
+            (Asia, NorthAmerica, 2),
+            (NorthAmerica, SouthAmerica, 1),
+            (Europe, Africa, 1),
+            (Asia, Oceania, 1),
+            (Asia, Africa, 1),
+            (Oceania, NorthAmerica, 1),
+        ];
+        let region_of = |c: CityId| geo::city(c).region;
+        for (ra, rb, want) in routes {
+            let mut pairs: Vec<(f64, usize, usize)> = Vec::new();
+            for (i, (ca, _)) in pops.iter().enumerate() {
+                for (j, (cb, _)) in pops.iter().enumerate() {
+                    if region_of(*ca) == ra && region_of(*cb) == rb {
+                        pairs.push((geo::city_distance_km(*ca, *cb), i, j));
+                    }
+                }
+            }
+            pairs.sort_by(|x, y| x.0.total_cmp(&y.0));
+            let (mut made, mut used) = (0, HashSet::new());
+            for (_, i, j) in pairs {
+                if made == want {
+                    break;
+                }
+                // Diverse means different landing cities at both ends.
+                if used.contains(&i) || used.contains(&j) {
+                    continue;
+                }
+                let (a, b) = (*pops[i].1.last().unwrap(), pops[j].1[0]);
+                if self.connect(a, b, LinkKind::Internal, cap).is_some() {
+                    made += 1;
+                }
+                used.insert(i);
+                used.insert(j);
+            }
+        }
     }
 
     fn tier2(&mut self, rng: &mut Rng) -> AsId {
