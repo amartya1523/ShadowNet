@@ -7,11 +7,12 @@
 
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{self, RecvTimeoutError};
-use std::sync::{Arc, RwLock};
+use std::collections::VecDeque;
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 use shadow_sim::time::MS;
-use shadow_sim::wire::{Frame, TopologyView};
+use shadow_sim::wire::{Frame, LogEvent, TopologyView};
 use shadow_sim::{Command, Scenario, SimConfig, World};
 use tokio::sync::{broadcast, oneshot};
 use tracing::{info, warn};
@@ -33,7 +34,11 @@ pub struct Handle {
     pub topology: Arc<RwLock<Arc<str>>>,
     pub run_id: Arc<AtomicU32>,
     pub scenarios: Arc<Vec<Scenario>>,
+    recent: Arc<Mutex<VecDeque<LogEvent>>>,
 }
+
+/// Events kept for clients that connect late.
+const RECENT_EVENTS: usize = 60;
 
 impl Handle {
     pub async fn command(&self, cmd: Command) -> Result<(), String> {
@@ -52,8 +57,16 @@ impl Handle {
     }
 
     pub fn hello(&self) -> String {
-        serde_json::json!({ "type": "hello", "version": 1, "runId": self.run_id.load(Ordering::Relaxed) }).to_string()
+        let recent: Vec<LogEvent> = self.recent.lock().unwrap().iter().cloned().collect();
+        serde_json::json!({
+            "type": "hello",
+            "version": 1,
+            "runId": self.run_id.load(Ordering::Relaxed),
+            "recent": recent,
+        })
+        .to_string()
     }
+
 }
 
 pub struct RunnerConfig {
@@ -81,6 +94,7 @@ pub fn spawn(cfg: RunnerConfig, scenarios: Vec<Scenario>, sinks: Option<tokio::s
         topology: Arc::new(RwLock::new(topology_json(&world, 1))),
         run_id: Arc::new(AtomicU32::new(1)),
         scenarios: Arc::new(scenarios),
+        recent: Arc::new(Mutex::new(VecDeque::new())),
     };
     let mut runner = Runner {
         world,
@@ -222,6 +236,7 @@ impl Runner {
                 let run_id = self.handle.run_id.fetch_add(1, Ordering::Relaxed) + 1;
                 *self.handle.topology.write().unwrap() = topology_json(&self.world, run_id);
                 self.last_sample_sec = -1;
+                self.handle.recent.lock().unwrap().clear();
                 info!(run_id, "reset in {:.0?}", started.elapsed());
                 let _ = self.handle.frames.send(self.handle.hello().into());
                 Ok(())
@@ -263,6 +278,13 @@ impl Runner {
             incidents: w.incidents(),
             ai: w.ai(),
         };
+
+        {
+            let mut recent = self.handle.recent.lock().unwrap();
+            recent.extend(frame.events.iter().cloned());
+            let excess = recent.len().saturating_sub(RECENT_EVENTS);
+            recent.drain(..excess);
+        }
 
         if let Some(sinks) = &self.sinks {
             let sec = frame.t.floor() as i64;

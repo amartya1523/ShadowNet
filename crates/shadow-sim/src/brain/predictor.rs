@@ -113,7 +113,14 @@ impl Predictor {
             horizon_s: 20.0,
             tracks: vec![Track::default(); n],
             centrality: b.iter().map(|&x| ((1.0 + x).ln() / (1.0 + max).ln()) as f32).collect(),
-            weights: [0.0; FEATURES + 1],
+            // Start from the prior instead of from a coin flip: failures are
+            // about half a percent of link-seconds, so an untrained model
+            // should say "almost certainly fine" about everything.
+            weights: {
+                let mut w = [0.0; FEATURES + 1];
+                w[FEATURES] = (0.005f64 / 0.995).ln();
+                w
+            },
             moments: [Moments::default(); FEATURES],
             pending: VecDeque::new(),
             top_pending: VecDeque::new(),

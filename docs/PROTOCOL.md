@@ -39,7 +39,8 @@ each, discriminated by `type`.
 ### hello
 
 ```jsonc
-{ "type": "hello", "version": 1, "runId": 3 }
+{ "type": "hello", "version": 1, "runId": 3,
+  "recent": [ /* last 60 events, same shape as frame.events */ ] }
 ```
 
 If `runId` differs from the topology you hold, refetch `/api/topology`.
