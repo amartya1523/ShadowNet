@@ -19,18 +19,19 @@ use shadow_graph::{LinkId, Topology};
 
 use crate::links::{BUFFER_S, LinkTable};
 
-pub const FEATURES: usize = 10;
+pub const FEATURES: usize = 11;
 pub const FEATURE_NAMES: [&str; FEATURES] = [
     "util_fast",
     "util_slow",
     "util_peak",
     "queue_fill",
-    "loss",
+    "drops",
+    "errors",
+    "error_trend",
     "jitter",
     "flaps",
     "recent_failure",
     "centrality",
-    "inter_as",
 ];
 
 #[derive(Clone, Default)]
@@ -38,6 +39,7 @@ struct Track {
     util_fast: f64,
     util_slow: f64,
     peak: f64,
+    errors_slow: f64,
     last_queue: f64,
     jitter: f64,
     flaps: VecDeque<f64>,
@@ -78,7 +80,6 @@ pub struct Predictor {
     pub horizon_s: f64,
     tracks: Vec<Track>,
     centrality: Vec<f32>,
-    inter_as: Vec<bool>,
     weights: [f64; FEATURES + 1],
     moments: [Moments; FEATURES],
     pending: VecDeque<Pending>,
@@ -112,7 +113,6 @@ impl Predictor {
             horizon_s: 20.0,
             tracks: vec![Track::default(); n],
             centrality: b.iter().map(|&x| ((1.0 + x).ln() / (1.0 + max).ln()) as f32).collect(),
-            inter_as: topo.links.iter().map(|l| l.is_inter_as()).collect(),
             weights: [0.0; FEATURES + 1],
             moments: [Moments::default(); FEATURES],
             pending: VecDeque::new(),
@@ -126,7 +126,7 @@ impl Predictor {
             auc: None,
             baseline_auc: None,
             last_eval: 0.0,
-            lr: 0.05,
+            lr: 0.01,
         }
     }
 
@@ -152,6 +152,7 @@ impl Predictor {
             let u = s.dir[0].util.max(s.dir[1].util);
             let qd = s.dir[0].queue_s.max(s.dir[1].queue_s);
             tr.util_fast += a_fast * (u - tr.util_fast);
+            tr.errors_slow += a_slow * (s.wear_errors - tr.errors_slow);
             tr.util_slow += a_slow * (u - tr.util_slow);
             tr.peak = u.max(tr.peak * decay);
             tr.jitter += a_fast * ((qd - tr.last_queue).abs() * 1e3 - tr.jitter);
@@ -163,7 +164,12 @@ impl Predictor {
         let tr = &self.tracks[l];
         let s = &links.state[l];
         let qd = s.dir[0].queue_s.max(s.dir[1].queue_s);
-        let loss = s.dir[0].loss.max(s.dir[1].loss);
+        // Congestion drops only; bit errors have their own counter.
+        let drops = 1.0 - (1.0 - s.dir[0].loss.max(s.dir[1].loss)) / (1.0 - s.wear_errors).max(1e-9);
+        // Errors as log-scale, the way anyone reads an error counter: the
+        // difference between 1e-6 and 1e-4 matters as much as 1e-4 to 1e-2.
+        let errors = (s.wear_errors * 1e6).ln_1p();
+        let trend = errors - (tr.errors_slow * 1e6).ln_1p();
         let flaps = tr.flaps.iter().filter(|&&f| t - f < 120.0).count() as f64;
         let recent = tr.last_failure.map_or(0.0, |f| (-(t - f) / 30.0).exp());
         [
@@ -171,12 +177,13 @@ impl Predictor {
             tr.util_slow as f32,
             tr.peak as f32,
             (qd / BUFFER_S) as f32,
-            loss as f32,
+            drops.max(0.0) as f32,
+            errors as f32,
+            trend as f32,
             tr.jitter as f32,
             flaps.ln_1p() as f32,
             recent as f32,
             self.centrality[l],
-            self.inter_as[l] as u8 as f32,
         ]
     }
 
@@ -230,10 +237,7 @@ impl Predictor {
     }
 
     fn failed_within(&self, l: usize, t0: f64) -> bool {
-        self.tracks[l]
-            .failures
-            .iter()
-            .any(|&f| f > t0 && f <= t0 + self.horizon_s)
+        self.tracks[l].failures.iter().any(|&f| f > t0 && f <= t0 + self.horizon_s)
     }
 
     fn learn(&mut self, p: Pending) {
@@ -255,13 +259,10 @@ impl Predictor {
             self.labelled += 1;
 
             // Failures are rare (well under 1% of samples), so positives are
-            // up-weighted by the running class ratio, capped so a single
-            // early positive cannot blow the weights up.
-            let w = if y {
-                (self.negatives as f64 / self.positives.max(1) as f64).clamp(1.0, 200.0)
-            } else {
-                1.0
-            };
+            // up-weighted by the running class ratio. Capped low: with a big
+            // weight a single positive moves the model further than a
+            // thousand negatives can pull it back, and it oscillates.
+            let w = if y { (self.negatives as f64 / self.positives.max(1) as f64).clamp(1.0, 20.0) } else { 1.0 };
             let g = (score - y as u8 as f64) * w * self.lr;
             for i in 0..FEATURES {
                 let xi = self.moments[i].scale(x[i] as f64);
@@ -289,12 +290,7 @@ impl Predictor {
     }
 
     pub fn top(&self, k: usize) -> Vec<(LinkId, f32)> {
-        let mut v: Vec<(LinkId, f32)> = self
-            .risk
-            .iter()
-            .enumerate()
-            .map(|(i, &r)| (LinkId::from_idx(i), r))
-            .collect();
+        let mut v: Vec<(LinkId, f32)> = self.risk.iter().enumerate().map(|(i, &r)| (LinkId::from_idx(i), r)).collect();
         v.sort_by(|a, b| b.1.total_cmp(&a.1));
         v.truncate(k);
         v

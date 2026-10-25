@@ -37,6 +37,10 @@ pub struct LinkState {
     pub seen_up: [bool; 2],
     pub extra_delay_s: f64,
     pub extra_loss: f64,
+    /// Bit errors from a degrading circuit (dirty optics, bent fibre).
+    /// Reported separately from congestion drops, the way interface error
+    /// counters are.
+    pub wear_errors: f64,
     /// Bumped whenever an injected impairment is replaced, so a stale
     /// `Clear` event can tell it is stale.
     pub impairment_token: u32,
@@ -63,6 +67,7 @@ impl LinkTable {
                     seen_up: [true, true],
                     extra_delay_s: 0.0,
                     extra_loss: 0.0,
+                    wear_errors: 0.0,
                     impairment_token: 0,
                     repair_token: 0,
                     dir: Default::default(),
@@ -110,7 +115,7 @@ impl LinkTable {
     #[inline]
     pub fn queue_target(&self, q: u32) -> RouterId {
         let (a, b) = self.ends[(q / 2) as usize];
-        if q % 2 == 0 { b } else { a }
+        if q.is_multiple_of(2) { b } else { a }
     }
 
     /// Current one-way delay through queue `q`: propagation, queueing and
@@ -165,7 +170,7 @@ impl LinkTable {
                 d.queue_s = d.backlog_bits / cap;
                 let arrived = d.offered_bps * dt;
                 let drop = if arrived > 0.0 { overflow / arrived } else { 0.0 };
-                d.loss = 1.0 - (1.0 - drop) * (1.0 - s.extra_loss);
+                d.loss = 1.0 - (1.0 - drop) * (1.0 - s.extra_loss) * (1.0 - s.wear_errors);
                 d.util = (d.offered_bps * (1.0 - drop)).min(cap) / cap;
             }
         }
