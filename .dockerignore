@@ -1,0 +1,6 @@
+target
+**/node_modules
+dashboard/.next
+dashboard/out
+media
+.git

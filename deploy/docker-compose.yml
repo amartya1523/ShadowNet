@@ -1,0 +1,42 @@
+# Full stack: simulator + dashboard, TimescaleDB for history, Redis for live
+# fan-out. `docker compose -f deploy/docker-compose.yml up --build`, then
+# open http://localhost:7070.
+services:
+  shadownetd:
+    build:
+      context: ..
+    ports:
+      - "7070:7070"
+    environment:
+      SHADOWNET_TIMESCALE_URL: postgres://shadownet:shadownet@timescale:5432/shadownet
+      SHADOWNET_REDIS_URL: redis://redis:6379
+      RUST_LOG: info
+    depends_on:
+      timescale:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  timescale:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_USER: shadownet
+      POSTGRES_PASSWORD: shadownet
+      POSTGRES_DB: shadownet
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale:/var/lib/postgresql/data
+      - ./queries.sql:/docker-entrypoint-initdb.d/zz-queries.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shadownet"]
+      interval: 2s
+      retries: 30
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  timescale:
